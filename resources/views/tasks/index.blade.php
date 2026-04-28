@@ -1,6 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
@@ -170,5 +167,3 @@
         });
     </script>
 </x-app-layout>
-
-@endsection

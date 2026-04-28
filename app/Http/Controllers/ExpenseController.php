@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ExpenseRequest;
 use App\Models\Expense;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,16 +12,57 @@ use Illuminate\View\View;
 class ExpenseController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with filters.
      */
     public function index(Request $request): View
     {
-        $expenses = $request->user()
-            ->expenses()
-            ->latest('date')
-            ->paginate(10);
+        $query = $request->user()->expenses();
 
-        return view('expenses.index', compact('expenses'));
+        // Filter by category
+        if ($request->has('category') && $request->category !== '') {
+            $query->where('category', $request->category);
+        }
+
+        // Filter by status
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by amount range
+        if ($request->has('min_amount') && $request->min_amount !== '') {
+            $query->where('amount', '>=', $request->min_amount);
+        }
+
+        if ($request->has('max_amount') && $request->max_amount !== '') {
+            $query->where('amount', '<=', $request->max_amount);
+        }
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->start_date !== '') {
+            $query->where('date', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && $request->end_date !== '') {
+            $query->where('date', '<=', $request->end_date);
+        }
+
+        // Search by description
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('description', 'like', '%' . $request->search . '%')
+                  ->orWhere('category', 'like', '%' . $request->search . '%');
+        }
+
+        $expenses = $query->latest('date')->paginate(15)->withQueryString();
+
+        // Get distinct categories for filter dropdown
+        $categories = $request->user()
+            ->expenses()
+            ->distinct()
+            ->pluck('category')
+            ->sort()
+            ->values();
+
+        return view('expenses.index', compact('expenses', 'categories'));
     }
 
     /**
@@ -34,20 +76,9 @@ class ExpenseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(ExpenseRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'gt:0'],
-            'category' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'payment_method' => ['required', 'in:cash,card,check,bank_transfer,mobile_payment,other'],
-            'date' => ['required', 'date'],
-            'receipt_url' => ['nullable', 'string', 'max:500'],
-            'status' => ['required', 'in:pending,confirmed,disputed,refunded'],
-            'tags' => ['nullable', 'array'],
-            'budget_alert_sent' => ['sometimes', 'boolean'],
-        ]);
-
+        $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
         Expense::create($validated);
@@ -60,26 +91,25 @@ class ExpenseController extends Controller
      */
     public function edit(Expense $expense): View
     {
+        // Verify ownership
+        if ($expense->user_id !== auth()->user()->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('expenses.edit', compact('expense'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Expense $expense): RedirectResponse
+    public function update(ExpenseRequest $request, Expense $expense): RedirectResponse
     {
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'gt:0'],
-            'category' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'payment_method' => ['required', 'in:cash,card,check,bank_transfer,mobile_payment,other'],
-            'date' => ['required', 'date'],
-            'receipt_url' => ['nullable', 'string', 'max:500'],
-            'status' => ['required', 'in:pending,confirmed,disputed,refunded'],
-            'tags' => ['nullable', 'array'],
-            'budget_alert_sent' => ['sometimes', 'boolean'],
-        ]);
+        // Verify ownership
+        if ($expense->user_id !== $request->user()->id) {
+            abort(403, 'Unauthorized action.');
+        }
 
+        $validated = $request->validated();
         $expense->update($validated);
 
         return Redirect::route('expenses.index')->with('status', 'expense-updated');
@@ -90,6 +120,11 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense): RedirectResponse
     {
+        // Verify ownership
+        if ($expense->user_id !== auth()->user()->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $expense->delete();
 
         return Redirect::route('expenses.index')->with('status', 'expense-deleted');
