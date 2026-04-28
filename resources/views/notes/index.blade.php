@@ -3,27 +3,21 @@
         <div class="flex items-center justify-between gap-4">
             <div>
                 <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Knowledge</p>
-                <h1 class="mt-1 text-2xl font-semibold text-slate-900">Notes</h1>
+                <h1 class="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Notes</h1>
             </div>
-            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary">+ New Note</button>
+            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary">+ Add Note</button>
         </div>
     </x-slot>
 
     <div class="page">
         <div class="page-container">
-            <!-- Filters -->
-            <div class="card mb-6">
-                <div class="card-body">
-                    <p class="mb-4 text-sm font-semibold text-slate-900">Filters</p>
-                    <form method="GET" action="{{ route('notes.index') }}" class="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-                        <div>
-                            <label class="form-label">Search</label>
-                            <input name="search" value="{{ request('search') }}" placeholder="Search title or content..." class="form-input w-full text-sm" />
-                        </div>
+            <div class="note-toolbar">
+                <div class="note-toolbar-inner">
+                    <form method="GET" action="{{ route('notes.index') }}" class="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
+                        <input name="search" value="{{ request('search') }}" placeholder="Search notes..." class="note-search text-sm" />
 
-                        <div>
-                            <label class="form-label">Category</label>
-                            <select name="category" class="form-input w-full text-sm">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select name="category" class="form-input rounded-xl border-slate-200 text-sm">
                                 <option value="">All categories</option>
                                 @foreach ($categories as $cat)
                                     <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>
@@ -31,34 +25,30 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
 
-                        <div class="flex items-end gap-2">
-                            <label class="form-label block">Show Pinned</label>
-                            <input name="pinned" type="checkbox" value="1" {{ request('pinned') === '1' ? 'checked' : '' }} class="h-5 w-5" />
-                        </div>
+                            <label class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                                <input name="pinned" type="checkbox" value="1" {{ request('pinned') === '1' ? 'checked' : '' }} class="form-checkbox" />
+                                Pinned
+                            </label>
 
-                        <div class="flex gap-2">
-                            <button type="submit" class="btn-secondary">Filter</button>
-                            <a href="{{ route('notes.index') }}" class="btn-secondary">Reset</a>
+                            <button type="submit" class="btn-secondary">Apply</button>
+                            <a href="{{ route('notes.index') }}" class="btn-secondary">Clear</a>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Notes Grid -->
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="note-grid">
                 @forelse ($notes as $note)
-                <div class="card group">
-                    <div class="card-body">
+                <article class="note-card group">
                         <div class="mb-3 flex items-start justify-between">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs font-medium uppercase text-slate-500">{{ $note->category ? ucfirst($note->category) : 'General' }}</p>
-                                <h3 class="mt-1 truncate text-sm font-semibold text-slate-900">{{ $note->title }}</h3>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ $note->category ? ucfirst($note->category) : 'General' }}</p>
+                                <h3 class="note-card-title mt-1 truncate">{{ $note->title }}</h3>
                             </div>
                             <form method="POST" action="{{ route('notes.togglePin', $note) }}" class="ml-2">
                                 @csrf
-                                <button type="submit" class="text-slate-400 hover:text-yellow-500" title="{{ $note->is_pinned ? 'Unpin' : 'Pin' }}">
+                                <button type="submit" class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-yellow-500" title="{{ $note->is_pinned ? 'Unpin' : 'Pin' }}">
                                     @if ($note->is_pinned)
                                         <svg class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5.951-1.429 5.951 1.429a1 1 0 001.169-1.409l-7-14z"/>
@@ -72,26 +62,27 @@
                             </form>
                         </div>
 
-                        <p class="mb-4 line-clamp-3 text-sm text-slate-600">{{ Str::limit($note->content, 150) }}</p>
+                        <p class="note-card-content line-clamp-4">{{ Str::limit($note->content, 220) }}</p>
 
-                        <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
+                        <div class="mt-5 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
                             <span>{{ $note->updated_at->diffForHumans() }}</span>
                             <div class="flex gap-2">
-                                <button x-data @click="$dispatch('open-note-modal', { mode: 'edit', note: {{ json_encode($note) }} })" class="text-primary-600 hover:text-primary-700">Edit</button>
+                                <button x-data @click="$dispatch('open-note-modal', { mode: 'edit', note: {{ json_encode($note) }} })" class="rounded-md px-2 py-1 text-primary-600 transition hover:bg-primary-50 hover:text-primary-700">Edit</button>
                                 <form method="POST" action="{{ route('notes.destroy', $note) }}" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-700" onclick="return confirm('Delete this note?')">Delete</button>
+                                    <button type="submit" class="rounded-md px-2 py-1 text-red-600 transition hover:bg-red-50 hover:text-red-700" onclick="return confirm('Delete this note?')">Delete</button>
                                 </form>
                             </div>
                         </div>
-                    </div>
-                </div>
+                </article>
                 @empty
                 <div class="col-span-full">
                     <div class="card">
-                        <div class="card-body py-12 text-center">
-                            <p class="text-slate-500">No notes found. <a href="{{ route('notes.index') }}" class="text-primary-600 hover:underline">Create one</a>.</p>
+                        <div class="card-body py-16 text-center">
+                            <h3 class="text-lg font-semibold text-slate-900">No notes yet</h3>
+                            <p class="mt-2 text-slate-500">Create your first note or adjust filters.</p>
+                            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary mt-5">+ Add Note</button>
                         </div>
                     </div>
                 </div>

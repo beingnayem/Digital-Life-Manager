@@ -126,4 +126,34 @@
 		@apply underline text-sm text-slate-600 hover:text-slate-900;
 		@apply rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
 	}
+
+	/* Notes UI */
+	.note-toolbar {
+		@apply card mb-6;
+	}
+
+	.note-toolbar-inner {
+		@apply card-body flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between;
+	}
+
+	.note-search {
+		@apply form-input w-full max-w-2xl rounded-xl bg-slate-50/80 border-slate-200;
+	}
+
+	.note-grid {
+		@apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
+	}
+
+	.note-card {
+		@apply rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition;
+		@apply hover:-translate-y-0.5 hover:shadow-md;
+	}
+
+	.note-card-title {
+		@apply text-base font-semibold text-slate-900 leading-snug;
+	}
+
+	.note-card-content {
+		@apply mt-3 text-sm leading-6 text-slate-600;
+	}
 }
