@@ -81,30 +81,62 @@ class User extends Authenticatable
     }
 
     /**
-     * Get dashboard statistics
+     * Get dashboard statistics with trends and chart data
      */
     public function getDashboardStats()
     {
+        // Tasks: Today vs Yesterday
         $completedTasksToday = $this->tasks()
             ->where('status', 'completed')
             ->whereDate('completed_at', today())
             ->count();
 
-        $totalExpenses = (float) $this->expenses()
+        $completedTasksYesterday = $this->tasks()
+            ->where('status', 'completed')
+            ->whereDate('completed_at', today()->subDay())
+            ->count();
+
+        $tasksTrend = $completedTasksYesterday > 0
+            ? round((($completedTasksToday - $completedTasksYesterday) / $completedTasksYesterday) * 100)
+            : ($completedTasksToday > 0 ? 100 : 0);
+
+        // Expenses: This week vs Last week
+        $expensesThisWeek = (float) $this->expenses()
             ->confirmed()
+            ->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()])
             ->sum('amount');
+
+        $expensesLastWeek = (float) $this->expenses()
+            ->confirmed()
+            ->whereBetween('date', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])
+            ->sum('amount');
+
+        $expensesTrend = $expensesLastWeek > 0
+            ? round((($expensesThisWeek - $expensesLastWeek) / $expensesLastWeek) * 100)
+            : ($expensesThisWeek > 0 ? 100 : 0);
+
+        // Charts: 7-day trends
+        $task7dayTrend = $this->getTask7DayTrend();
+        $expense7dayTrend = $this->getExpense7DayTrend();
+        $mood7dayTrend = $this->getMood7DayTrend();
+        $expenseByCategoryChart = $this->getExpenseByCategory();
+
+        // Recent items for activity sections
+        $recentTasks = $this->tasks()
+            ->latest('updated_at')
+            ->limit(5)
+            ->get(['id', 'title', 'status', 'priority', 'due_date', 'updated_at']);
+
+        $recentExpenses = $this->expenses()
+            ->latest('date')
+            ->limit(5)
+            ->get(['id', 'description', 'amount', 'category', 'date', 'status']);
 
         $recentNotes = $this->notes()
             ->active()
             ->latest('updated_at')
             ->limit(5)
-            ->get([
-                'id',
-                'title',
-                'category',
-                'is_pinned',
-                'updated_at',
-            ]);
+            ->get(['id', 'title', 'category', 'is_pinned', 'updated_at']);
 
         $recentMoods = $this->moods()
             ->whereDate('recorded_date', '>=', now()->subDays(6))
@@ -133,8 +165,12 @@ class User extends Authenticatable
 
         return [
             'tasks_completed_today' => $completedTasksToday,
-            'total_expenses' => $totalExpenses,
+            'tasks_trend' => $tasksTrend,
+            'total_expenses' => $expensesThisWeek,
+            'expenses_trend' => $expensesTrend,
             'recent_notes' => $recentNotes,
+            'recent_tasks' => $recentTasks,
+            'recent_expenses' => $recentExpenses,
             'mood_summary' => [
                 'latest' => $latestMood,
                 'week_average' => $recentMoods->isNotEmpty()
@@ -142,7 +178,94 @@ class User extends Authenticatable
                     : null,
                 'entries_count' => $recentMoods->count(),
             ],
+            'charts' => [
+                'tasks_7day' => $task7dayTrend,
+                'expenses_7day' => $expense7dayTrend,
+                'mood_7day' => $mood7dayTrend,
+                'expenses_by_category' => $expenseByCategoryChart,
+            ],
         ];
+    }
+
+    /**
+     * Get task completion trend for the last 7 days
+     */
+    private function getTask7DayTrend()
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            $count = $this->tasks()
+                ->where('status', 'completed')
+                ->whereDate('completed_at', $date)
+                ->count();
+            $data[] = [
+                'label' => $date->format('M d'),
+                'value' => $count,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get expense trend for the last 7 days
+     */
+    private function getExpense7DayTrend()
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            $amount = (float) $this->expenses()
+                ->confirmed()
+                ->whereDate('date', $date)
+                ->sum('amount');
+            $data[] = [
+                'label' => $date->format('M d'),
+                'value' => round($amount, 2),
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get mood trend for the last 7 days
+     */
+    private function getMood7DayTrend()
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $avg = $this->moods()
+                ->whereDate('recorded_date', $date)
+                ->average('mood_level');
+            $data[] = [
+                'label' => $date->format('M d'),
+                'value' => $avg ? round((float) $avg, 1) : null,
+            ];
+        }
+        return $data;
+    }
+
+    /**
+     * Get expense breakdown by category
+     */
+    private function getExpenseByCategory()
+    {
+        $thisMonth = now()->format('Y-m');
+        $categories = $this->expenses()
+            ->confirmed()
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->groupBy('category')
+            ->selectRaw('category, SUM(amount) as total')
+            ->orderByDesc('total')
+            ->get()
+            ->take(6);
+
+        return $categories->map(fn ($cat) => [
+            'label' => $cat->category,
+            'value' => round((float) $cat->total, 2),
+        ]);
     }
 
     /**
