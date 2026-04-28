@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MoodRequest;
 use App\Models\Mood;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,14 +12,25 @@ use Illuminate\View\View;
 class MoodController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource with lightweight filters.
      */
     public function index(Request $request): View
     {
-        $moods = $request->user()
-            ->moods()
-            ->latest('recorded_date')
-            ->paginate(10);
+        $query = $request->user()->moods();
+
+        if ($request->filled('mood_type')) {
+            $query->where('mood_label', $request->string('mood_type'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('recorded_date', '>=', $request->date('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('recorded_date', '<=', $request->date('end_date'));
+        }
+
+        $moods = $query->latest('recorded_date')->paginate(12)->withQueryString();
 
         return view('moods.index', compact('moods'));
     }
@@ -34,27 +46,18 @@ class MoodController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(MoodRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'mood_level' => ['required', 'integer', 'between:1,10'],
-            'mood_label' => ['nullable', 'string', 'max:50'],
-            'energy_level' => ['nullable', 'integer', 'between:1,10'],
-            'stress_level' => ['nullable', 'integer', 'between:1,10'],
-            'focus_level' => ['nullable', 'integer', 'between:1,10'],
-            'emotion_tags' => ['nullable', 'array'],
-            'notes' => ['nullable', 'string'],
-            'activities' => ['nullable', 'array'],
-            'sleep_hours' => ['nullable', 'numeric', 'between:0,24'],
-            'weather' => ['nullable', 'string', 'max:50'],
-            'location' => ['nullable', 'string', 'max:100'],
-            'recorded_date' => ['required', 'date'],
-            'recorded_at' => ['required', 'date'],
+        $validated = $request->validated();
+
+        Mood::create([
+            'user_id' => $request->user()->id,
+            'mood_label' => $validated['mood_type'],
+            'mood_level' => $this->mapMoodTypeToLevel($validated['mood_type']),
+            'recorded_date' => $validated['date'],
+            'recorded_at' => now(),
+            'emotion_tags' => [$validated['mood_type']],
         ]);
-
-        $validated['user_id'] = $request->user()->id;
-
-        Mood::create($validated);
 
         return Redirect::route('moods.index')->with('status', 'mood-created');
     }
@@ -64,31 +67,31 @@ class MoodController extends Controller
      */
     public function edit(Mood $mood): View
     {
+        if ($mood->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('moods.edit', compact('mood'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Mood $mood): RedirectResponse
+    public function update(MoodRequest $request, Mood $mood): RedirectResponse
     {
-        $validated = $request->validate([
-            'mood_level' => ['required', 'integer', 'between:1,10'],
-            'mood_label' => ['nullable', 'string', 'max:50'],
-            'energy_level' => ['nullable', 'integer', 'between:1,10'],
-            'stress_level' => ['nullable', 'integer', 'between:1,10'],
-            'focus_level' => ['nullable', 'integer', 'between:1,10'],
-            'emotion_tags' => ['nullable', 'array'],
-            'notes' => ['nullable', 'string'],
-            'activities' => ['nullable', 'array'],
-            'sleep_hours' => ['nullable', 'numeric', 'between:0,24'],
-            'weather' => ['nullable', 'string', 'max:50'],
-            'location' => ['nullable', 'string', 'max:100'],
-            'recorded_date' => ['required', 'date'],
-            'recorded_at' => ['required', 'date'],
-        ]);
+        if ($mood->user_id !== $request->user()->id) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        $mood->update($validated);
+        $validated = $request->validated();
+
+        $mood->update([
+            'mood_label' => $validated['mood_type'],
+            'mood_level' => $this->mapMoodTypeToLevel($validated['mood_type']),
+            'recorded_date' => $validated['date'],
+            'recorded_at' => now(),
+            'emotion_tags' => [$validated['mood_type']],
+        ]);
 
         return Redirect::route('moods.index')->with('status', 'mood-updated');
     }
@@ -98,8 +101,31 @@ class MoodController extends Controller
      */
     public function destroy(Mood $mood): RedirectResponse
     {
+        if ($mood->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $mood->delete();
 
         return Redirect::route('moods.index')->with('status', 'mood-deleted');
+    }
+
+    /**
+     * Map mood type labels to a normalized 1-10 scale.
+     */
+    private function mapMoodTypeToLevel(string $moodType): int
+    {
+        return match ($moodType) {
+            'excited' => 9,
+            'happy' => 8,
+            'calm' => 7,
+            'neutral' => 5,
+            'tired' => 4,
+            'sad' => 3,
+            'anxious' => 3,
+            'stressed' => 2,
+            'angry' => 2,
+            default => 5,
+        };
     }
 }
