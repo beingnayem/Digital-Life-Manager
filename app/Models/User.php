@@ -85,44 +85,62 @@ class User extends Authenticatable
      */
     public function getDashboardStats()
     {
+        $completedTasksToday = $this->tasks()
+            ->where('status', 'completed')
+            ->whereDate('completed_at', today())
+            ->count();
+
+        $totalExpenses = (float) $this->expenses()
+            ->confirmed()
+            ->sum('amount');
+
+        $recentNotes = $this->notes()
+            ->active()
+            ->latest('updated_at')
+            ->limit(5)
+            ->get([
+                'id',
+                'title',
+                'category',
+                'is_pinned',
+                'updated_at',
+            ]);
+
+        $recentMoods = $this->moods()
+            ->whereDate('recorded_date', '>=', now()->subDays(6))
+            ->orderByDesc('recorded_date')
+            ->get([
+                'id',
+                'mood_level',
+                'mood_label',
+                'energy_level',
+                'stress_level',
+                'focus_level',
+                'recorded_date',
+            ]);
+
+        $latestMood = $recentMoods->first() ?: $this->moods()
+            ->orderByDesc('recorded_date')
+            ->first([
+                'id',
+                'mood_level',
+                'mood_label',
+                'energy_level',
+                'stress_level',
+                'focus_level',
+                'recorded_date',
+            ]);
+
         return [
-            'tasks' => [
-                'total' => $this->tasks()->count(),
-                'completed' => $this->tasks()->where('status', 'completed')->count(),
-                'pending' => $this->tasks()->where('status', '!=', 'completed')->count(),
-                'overdue' => $this->tasks()
-                    ->where('due_date', '<', now())
-                    ->where('status', '!=', 'completed')
-                    ->count(),
-            ],
-            'expenses' => [
-                'this_month' => $this->expenses()
-                    ->currentMonth()
-                    ->sum('amount'),
-                'average_per_day' => $this->expenses()
-                    ->currentMonth()
-                    ->average('amount'),
-                'by_category' => $this->expenses()
-                    ->currentMonth()
-                    ->groupBy('category')
-                    ->selectRaw('category, SUM(amount) as total')
-                    ->get(),
-            ],
-            'notes' => [
-                'total' => $this->notes()->count(),
-                'pinned' => $this->notes()->where('is_pinned', true)->count(),
-                'archived' => $this->notes()->where('is_archived', true)->count(),
-            ],
-            'mood' => [
-                'today' => $this->moods()
-                    ->whereDate('recorded_date', now())
-                    ->first(),
-                'week_average' => $this->moods()
-                    ->where('recorded_date', '>=', now()->subDays(7))
-                    ->average('mood_level'),
-                'month_average' => $this->moods()
-                    ->where('recorded_date', '>=', now()->subMonth())
-                    ->average('mood_level'),
+            'tasks_completed_today' => $completedTasksToday,
+            'total_expenses' => $totalExpenses,
+            'recent_notes' => $recentNotes,
+            'mood_summary' => [
+                'latest' => $latestMood,
+                'week_average' => $recentMoods->isNotEmpty()
+                    ? round((float) $recentMoods->avg('mood_level'), 1)
+                    : null,
+                'entries_count' => $recentMoods->count(),
             ],
         ];
     }
