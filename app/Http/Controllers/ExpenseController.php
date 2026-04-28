@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ExpenseRequest;
 use App\Models\Expense;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -83,12 +84,22 @@ class ExpenseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ExpenseRequest $request): RedirectResponse
+    public function store(ExpenseRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
-        Expense::create($validated);
+        $expense = Expense::create($validated);
+
+        if ($request->expectsJson()) {
+            $expense->refresh();
+
+            return response()->json([
+                'message' => 'expense-created',
+                'expense' => $expense,
+                'row_html' => view('expenses.partials.row', ['expense' => $expense])->render(),
+            ]);
+        }
 
         return Redirect::route('expenses.index')->with('status', 'expense-created');
     }
@@ -109,7 +120,7 @@ class ExpenseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(ExpenseRequest $request, Expense $expense): RedirectResponse
+    public function update(ExpenseRequest $request, Expense $expense): RedirectResponse|JsonResponse
     {
         // Verify ownership
         if ($expense->user_id !== $request->user()->id) {
@@ -119,20 +130,38 @@ class ExpenseController extends Controller
         $validated = $request->validated();
         $expense->update($validated);
 
+        if ($request->expectsJson()) {
+            $expense->refresh();
+
+            return response()->json([
+                'message' => 'expense-updated',
+                'expense' => $expense,
+                'row_html' => view('expenses.partials.row', ['expense' => $expense])->render(),
+            ]);
+        }
+
         return Redirect::route('expenses.index')->with('status', 'expense-updated');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Expense $expense): RedirectResponse
+    public function destroy(Request $request, Expense $expense): RedirectResponse|JsonResponse
     {
         // Verify ownership
         if ($expense->user_id !== auth()->user()->id) {
             abort(403, 'Unauthorized action.');
         }
 
+        $expenseId = $expense->id;
         $expense->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'expense-deleted',
+                'expense_id' => $expenseId,
+            ]);
+        }
 
         return Redirect::route('expenses.index')->with('status', 'expense-deleted');
     }

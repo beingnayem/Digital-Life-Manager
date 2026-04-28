@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Alpine from 'alpinejs';
 import { initAllCharts, initMoodTrackerWeeklyChart } from './charts';
+import './record-actions';
 
 window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';

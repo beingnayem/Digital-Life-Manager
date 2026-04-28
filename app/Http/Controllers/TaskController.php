@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
  use Illuminate\Http\Request;
 use App\Http\Requests\TaskRequest;
@@ -47,12 +48,22 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TaskRequest $request): RedirectResponse
+    public function store(TaskRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
-        Task::create($validated);
+        $task = Task::create($validated);
+
+        if ($request->expectsJson()) {
+            $task->refresh();
+
+            return response()->json([
+                'message' => 'task-created',
+                'task' => $task,
+                'row_html' => view('tasks.partials.row', ['task' => $task])->render(),
+            ]);
+        }
 
         return Redirect::route('tasks.index')->with('status', 'task-created');
     }
@@ -72,7 +83,7 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(TaskRequest $request, Task $task): RedirectResponse
+    public function update(TaskRequest $request, Task $task): RedirectResponse|JsonResponse
     {
 
         if ($task->user_id !== $request->user()->id) {
@@ -82,19 +93,37 @@ class TaskController extends Controller
         $validated = $request->validated();
         $task->update($validated);
 
+        if ($request->expectsJson()) {
+            $task->refresh();
+
+            return response()->json([
+                'message' => 'task-updated',
+                'task' => $task,
+                'row_html' => view('tasks.partials.row', ['task' => $task])->render(),
+            ]);
+        }
+
         return Redirect::route('tasks.index')->with('status', 'task-updated');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Task $task): RedirectResponse
+    public function destroy(Request $request, Task $task): RedirectResponse|JsonResponse
     {
         if ($task->user_id !== $request->user()->id) {
             abort(403);
         }
 
+        $taskId = $task->id;
         $task->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'task-deleted',
+                'task_id' => $taskId,
+            ]);
+        }
 
         return Redirect::route('tasks.index')->with('status', 'task-deleted');
     }
