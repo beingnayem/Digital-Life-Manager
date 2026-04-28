@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+ use Illuminate\Http\Request;
+use App\Http\Requests\TaskRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -34,24 +35,9 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(TaskRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'priority' => ['required', 'in:low,medium,high,urgent'],
-            'status' => ['required', 'in:not_started,in_progress,completed,archived,cancelled'],
-            'due_date' => ['nullable', 'date'],
-            'completed_at' => ['nullable', 'date'],
-            'estimated_hours' => ['nullable', 'integer', 'min:0'],
-            'actual_hours' => ['nullable', 'integer', 'min:0'],
-            'color_tag' => ['nullable', 'string', 'size:7'],
-            'is_recurring' => ['sometimes', 'boolean'],
-            'recurrence_pattern' => ['nullable', 'string', 'max:50'],
-            'tags' => ['nullable', 'array'],
-        ]);
-
+        $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
 
         Task::create($validated);
@@ -62,32 +48,26 @@ class TaskController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Task $task): View
+    public function edit(Request $request, Task $task): View
     {
+        if ($task->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         return view('tasks.edit', compact('task'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(TaskRequest $request, Task $task): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'priority' => ['required', 'in:low,medium,high,urgent'],
-            'status' => ['required', 'in:not_started,in_progress,completed,archived,cancelled'],
-            'due_date' => ['nullable', 'date'],
-            'completed_at' => ['nullable', 'date'],
-            'estimated_hours' => ['nullable', 'integer', 'min:0'],
-            'actual_hours' => ['nullable', 'integer', 'min:0'],
-            'color_tag' => ['nullable', 'string', 'size:7'],
-            'is_recurring' => ['sometimes', 'boolean'],
-            'recurrence_pattern' => ['nullable', 'string', 'max:50'],
-            'tags' => ['nullable', 'array'],
-        ]);
 
+        if ($task->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $validated = $request->validated();
         $task->update($validated);
 
         return Redirect::route('tasks.index')->with('status', 'task-updated');
@@ -96,8 +76,12 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task): RedirectResponse
+    public function destroy(Request $request, Task $task): RedirectResponse
     {
+        if ($task->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $task->delete();
 
         return Redirect::route('tasks.index')->with('status', 'task-deleted');
