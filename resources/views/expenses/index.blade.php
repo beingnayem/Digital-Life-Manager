@@ -14,6 +14,7 @@
             <!-- Filters -->
             <div class="card mb-6">
                 <div class="card-body">
+                    <p class="mb-4 text-sm font-semibold text-slate-900">Filters</p>
                     <form method="GET" action="{{ route('expenses.index') }}" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div>
                             <label class="form-label">Category</label>
@@ -99,9 +100,45 @@
                 </div>
             </div>
 
+            <!-- Charts -->
+            <div class="mb-6 grid gap-6 lg:grid-cols-2">
+                <!-- 30-Day Trend -->
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-4 text-sm font-semibold text-slate-900">30-Day Trend</h3>
+                        <div class="flex h-64 items-center justify-center">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-4 text-sm font-semibold text-slate-900">By Category</h3>
+                        <div class="flex h-64 items-center justify-center">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Breakdown -->
+            <div class="mb-6 grid gap-6 lg:grid-cols-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-4 text-sm font-semibold text-slate-900">By Status</h3>
+                        <div class="flex h-64 items-center justify-center">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Expenses Table -->
             <div class="card">
                 <div class="card-body">
+                    <h3 class="mb-4 text-sm font-semibold text-slate-900">Recent Expenses</h3>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-white">
@@ -243,6 +280,104 @@
                 mode: 'create',
                 expense: { }
             });
+        });
+
+        // Initialize charts when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartData = @json($chartData);
+
+            // 30-Day Trend Chart
+            if (chartData.trend_30day && chartData.trend_30day.length > 0) {
+                const trendCtx = document.getElementById('trendChart').getContext('2d');
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.trend_30day.map(d => d.label),
+                        datasets: [{
+                            label: 'Daily Expenses',
+                            data: chartData.trend_30day.map(d => d.value),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: v => '$' + v.toFixed(0) }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Category Breakdown Chart
+            if (chartData.category_breakdown && chartData.category_breakdown.length > 0) {
+                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+                new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.category_breakdown.map(d => d.label),
+                        datasets: [{
+                            data: chartData.category_breakdown.map(d => d.value),
+                            backgroundColor: colors.slice(0, chartData.category_breakdown.length),
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { padding: 12, font: { size: 12 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Status Breakdown Chart (Bar)
+            if (chartData.status_breakdown && chartData.status_breakdown.length > 0) {
+                const statusCtx = document.getElementById('statusChart').getContext('2d');
+                new Chart(statusCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.status_breakdown.map(d => d.label),
+                        datasets: [{
+                            label: 'Amount',
+                            data: chartData.status_breakdown.map(d => d.value),
+                            backgroundColor: chartData.status_breakdown.map(d => d.color),
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { callback: v => '$' + v.toFixed(0) }
+                            }
+                        }
+                    }
+                });
+            }
         });
     </script>
 </x-app-layout>

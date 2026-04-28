@@ -62,7 +62,14 @@ class ExpenseController extends Controller
             ->sort()
             ->values();
 
-        return view('expenses.index', compact('expenses', 'categories'));
+        // Calculate chart data
+        $chartData = [
+            'trend_30day' => $this->get30DayTrend($request->user()),
+            'category_breakdown' => $this->getCategoryBreakdown($request->user()),
+            'status_breakdown' => $this->getStatusBreakdown($request->user()),
+        ];
+
+        return view('expenses.index', compact('expenses', 'categories', 'chartData'));
     }
 
     /**
@@ -128,5 +135,78 @@ class ExpenseController extends Controller
         $expense->delete();
 
         return Redirect::route('expenses.index')->with('status', 'expense-deleted');
+    }
+
+    /**
+     * Get 30-day expense trend data for charting.
+     */
+    private function get30DayTrend($user)
+    {
+        $data = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+            $amount = (float) $user->expenses()
+                ->confirmed()
+                ->whereDate('date', $date)
+                ->sum('amount');
+            
+            if ($i % 5 === 0 || $i === 0) {  // Show every 5 days to avoid clutter
+                $data[] = [
+                    'label' => $date->format('M d'),
+                    'value' => round($amount, 2),
+                ];
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Get expense breakdown by category.
+     */
+    private function getCategoryBreakdown($user)
+    {
+        $categories = $user->expenses()
+            ->confirmed()
+            ->groupBy('category')
+            ->selectRaw('category, SUM(amount) as total')
+            ->orderByDesc('total')
+            ->get()
+            ->take(8);
+
+        return $categories->map(fn($cat) => [
+            'label' => $cat->category,
+            'value' => round((float)$cat->total, 2),
+        ])->values();
+    }
+
+    /**
+     * Get expense breakdown by status.
+     */
+    private function getStatusBreakdown($user)
+    {
+        $statuses = ['confirmed', 'pending', 'disputed', 'refunded'];
+        $statusColors = [
+            'confirmed' => '#10b981',
+            'pending' => '#f59e0b',
+            'disputed' => '#ef4444',
+            'refunded' => '#6b7280',
+        ];
+
+        $data = [];
+        foreach ($statuses as $status) {
+            $amount = (float) $user->expenses()
+                ->where('status', $status)
+                ->sum('amount');
+            
+            if ($amount > 0) {
+                $data[] = [
+                    'label' => ucfirst($status),
+                    'value' => round($amount, 2),
+                    'color' => $statusColors[$status],
+                ];
+            }
+        }
+
+        return $data;
     }
 }
