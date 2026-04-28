@@ -1,4 +1,4 @@
-<tr data-expense-id="{{ $expense->id }}" data-expense-amount="{{ $expense->amount }}" data-expense-status="{{ $expense->status }}" class="hover:bg-slate-50">
+<tr data-expense-id="{{ $expense->id }}" data-expense-amount="{{ $expense->amount }}" data-expense-status="{{ $expense->status }}" class="transition-colors duration-200 hover:bg-slate-50">
     <td class="px-4 py-3 text-sm text-slate-600">{{ $expense->date->format('M d, Y') }}</td>
     <td class="px-4 py-3">
         <div class="min-w-0">
@@ -18,11 +18,11 @@
         </span>
     </td>
     <td class="px-4 py-3 text-right text-sm font-medium">
-        <button x-data @click="$dispatch('open-expense-modal', { mode: 'edit', expense: {{ json_encode($expense) }} })" class="mr-3 text-primary-600 hover:text-primary-700">Edit</button>
+        <button x-data @click="$dispatch('open-expense-modal', { mode: 'edit', expense: {{ json_encode($expense) }} })" class="mr-3 text-primary-600 transition-colors duration-200 hover:text-primary-700">Edit</button>
         <form method="POST" action="{{ route('expenses.destroy', $expense) }}" class="inline" data-ajax-row-form="expense" data-record-id="{{ $expense->id }}" data-record-action="delete">
             @csrf
             @method('DELETE')
-            <button type="submit" class="text-red-600 hover:text-red-700">Delete</button>
+            <button type="submit" data-loading-label="Deleting..." class="text-red-600 transition-colors duration-200 hover:text-red-700">Delete</button>
         </form>
     </td>
 </tr>

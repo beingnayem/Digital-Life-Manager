@@ -19,10 +19,37 @@ function getRowSelector(resource, id) {
         : `[data-expense-id="${id}"]`;
 }
 
+function isAjaxResource(resource) {
+    return resource === 'task' || resource === 'expense';
+}
+
 function getTbody(resource) {
     return resource === 'task'
         ? document.querySelector('#tasks-table-body')
         : document.querySelector('#expenses-table-body');
+}
+
+function setLoadingState(form, isLoading) {
+    form.classList.toggle('ajax-loading', isLoading);
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) return;
+
+    if (isLoading) {
+        if (!submitButton.dataset.originalHtml) {
+            submitButton.dataset.originalHtml = submitButton.innerHTML;
+        }
+
+        const label = submitButton.dataset.loadingLabel ?? 'Loading...';
+        submitButton.innerHTML = `<span class="inline-flex items-center gap-2"><span class="ajax-spinner"></span>${label}</span>`;
+        submitButton.disabled = true;
+        return;
+    }
+
+    if (submitButton.dataset.originalHtml) {
+        submitButton.innerHTML = submitButton.dataset.originalHtml;
+    }
+    submitButton.disabled = false;
 }
 
 function closeModal(resource) {
@@ -155,12 +182,13 @@ function wireAjaxForms() {
         if (!(form instanceof HTMLFormElement)) return;
 
         const resource = form.dataset.ajaxForm || form.dataset.ajaxRowForm;
-        if (!resource) return;
+        if (!isAjaxResource(resource)) return;
 
         event.preventDefault();
         form.querySelectorAll('button, input, select, textarea').forEach((element) => {
             element.disabled = true;
         });
+        setLoadingState(form, true);
 
         try {
             const data = await submitAjaxForm(form, resource);
@@ -189,6 +217,7 @@ function wireAjaxForms() {
             const message = error?.message || 'Unable to save changes.';
             window.dispatchEvent(new CustomEvent('app:toast', { detail: { type: 'error', message } }));
         } finally {
+            setLoadingState(form, false);
             form.querySelectorAll('button, input, select, textarea').forEach((element) => {
                 element.disabled = false;
             });

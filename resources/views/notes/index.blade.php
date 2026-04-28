@@ -78,13 +78,12 @@
                 </article>
                 @empty
                 <div class="col-span-full">
-                    <div class="card">
-                        <div class="card-body py-16 text-center">
-                            <h3 class="text-lg font-semibold text-slate-900">No notes yet</h3>
-                            <p class="mt-2 text-slate-500">Create your first note or adjust filters.</p>
-                            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary mt-5">+ Add Note</button>
-                        </div>
-                    </div>
+                    <x-empty-state
+                        title="No notes yet"
+                        description="Create your first note or adjust filters to reveal saved knowledge and ideas."
+                    >
+                        <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary">+ Add Note</button>
+                    </x-empty-state>
                 </div>
                 @endforelse
             </div>
@@ -133,7 +132,7 @@
 
                             <div class="flex items-center justify-end gap-2">
                                 <button type="button" @click="$store.noteModal.open=false" class="btn-secondary">Cancel</button>
-                                <button type="submit" class="btn-primary" x-text="$store.noteModal.mode === 'create' ? 'Create' : 'Save'"></button>
+                                <button type="submit" class="btn-primary" data-loading-label="Saving..." x-text="$store.noteModal.mode === 'create' ? 'Create' : 'Save'"></button>
                             </div>
                         </form>
                     </div>

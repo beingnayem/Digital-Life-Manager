@@ -156,8 +156,13 @@
                                     @include('expenses.partials.row', ['expense' => $expense])
                                 @empty
                                     <tr data-empty-state>
-                                        <td colspan="6" class="px-4 py-8 text-center text-slate-500">
-                                            No expenses found. <a href="{{ route('expenses.index') }}" class="text-primary-600 hover:underline">Create one</a>.
+                                        <td colspan="6" class="px-4 py-8">
+                                            <x-empty-state
+                                                title="No expenses found"
+                                                description="Add your first expense to keep your finances organized and visible in the summary charts."
+                                            >
+                                                <button x-data @click="$dispatch('open-expense-modal', { mode: 'create' })" class="btn-primary">+ New Expense</button>
+                                            </x-empty-state>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -237,7 +242,7 @@
 
                             <div class="flex items-center justify-end gap-2">
                                 <button type="button" @click="$store.expenseModal.open=false" class="btn-secondary">Cancel</button>
-                                <button type="submit" class="btn-primary" x-text="$store.expenseModal.mode === 'create' ? 'Create' : 'Save'"></button>
+                                <button type="submit" class="btn-primary" data-loading-label="Saving..." x-text="$store.expenseModal.mode === 'create' ? 'Create' : 'Save'"></button>
                             </div>
                         </form>
                     </div>

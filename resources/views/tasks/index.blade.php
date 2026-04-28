@@ -52,7 +52,14 @@
                                     @include('tasks.partials.row', ['task' => $task])
                                 @empty
                                     <tr data-empty-state>
-                                        <td colspan="6" class="px-4 py-10 text-center text-slate-500">No tasks yet. Add your first task to get started.</td>
+                                        <td colspan="6" class="px-4 py-10">
+                                            <x-empty-state
+                                                title="No tasks yet"
+                                                description="Create your first task to start planning your day and tracking progress."
+                                            >
+                                                <button x-data @click="$dispatch('open-task-modal', { mode: 'create' })" class="btn-primary">+ New Task</button>
+                                            </x-empty-state>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -120,7 +127,7 @@
 
                             <div class="flex items-center justify-end gap-2">
                                 <button type="button" @click="$store.taskModal.open=false" class="btn-secondary">Cancel</button>
-                                <button type="submit" class="btn-primary" x-text="$store.taskModal.mode === 'create' ? 'Create' : 'Save'"></button>
+                                <button type="submit" class="btn-primary" data-loading-label="Saving..." x-text="$store.taskModal.mode === 'create' ? 'Create' : 'Save'"></button>
                             </div>
                         </form>
                     </div>

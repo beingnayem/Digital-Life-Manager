@@ -107,9 +107,12 @@
 
                         <div class="mt-4">{{ $moods->links() }}</div>
                     @else
-                        <div class="rounded-xl border border-dashed border-slate-300 p-10 text-center">
-                            <p class="text-slate-500">No mood entries yet. Add your first mood today.</p>
-                        </div>
+                        <x-empty-state
+                            title="No mood entries yet"
+                            description="Track your daily mood to build a meaningful weekly trend and spot patterns over time."
+                        >
+                            <button x-data @click="$dispatch('open-mood-modal', { mode: 'create' })" class="btn-primary">Record Mood</button>
+                        </x-empty-state>
                     @endif
                 </div>
             </div>
