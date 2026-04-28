@@ -16,10 +16,22 @@ class TaskController extends Controller
      */
     public function index(Request $request): View
     {
-        $tasks = $request->user()
-            ->tasks()
-            ->latest()
-            ->paginate(10);
+        $query = $request->user()->tasks();
+
+        // Filters
+        if ($priority = $request->query('priority')) {
+            $query->where('priority', $priority);
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($search = $request->query('search')) {
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        $tasks = $query->latest()->paginate(10)->withQueryString();
 
         return view('tasks.index', compact('tasks'));
     }
