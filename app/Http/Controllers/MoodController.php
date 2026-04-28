@@ -32,7 +32,21 @@ class MoodController extends Controller
 
         $moods = $query->latest('recorded_date')->paginate(12)->withQueryString();
 
-        return view('moods.index', compact('moods'));
+        $moodTypes = [
+            'happy',
+            'sad',
+            'anxious',
+            'angry',
+            'calm',
+            'excited',
+            'tired',
+            'neutral',
+            'stressed',
+        ];
+
+        $weeklyChartData = $this->buildWeeklyChartData($request->user()->id);
+
+        return view('moods.index', compact('moods', 'moodTypes', 'weeklyChartData'));
     }
 
     /**
@@ -127,5 +141,29 @@ class MoodController extends Controller
             'angry' => 2,
             default => 5,
         };
+    }
+
+    /**
+     * Build a 7-day mood chart payload.
+     */
+    private function buildWeeklyChartData(int $userId): array
+    {
+        $data = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->startOfDay();
+
+            $entry = Mood::query()
+                ->where('user_id', $userId)
+                ->whereDate('recorded_date', $date)
+                ->first(['mood_level']);
+
+            $data[] = [
+                'label' => $date->format('D'),
+                'value' => $entry?->mood_level,
+            ];
+        }
+
+        return $data;
     }
 }

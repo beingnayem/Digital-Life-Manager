@@ -234,3 +234,48 @@ export function initAllCharts(statsData) {
         }
     }
 }
+
+/**
+ * Initialize weekly mood tracker chart
+ */
+export function initMoodTrackerWeeklyChart(data) {
+    const ctx = document.getElementById('moodTrackerWeeklyChart');
+    if (!ctx || !data?.length) return;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.label),
+            datasets: [{
+                label: 'Mood (1-10)',
+                data: data.map(d => d.value),
+                borderColor: 'rgb(14, 165, 233)',
+                backgroundColor: 'rgba(14, 165, 233, 0.08)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointBackgroundColor: 'rgb(14, 165, 233)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverRadius: 6,
+                spanGaps: true,
+            }],
+        },
+        options: {
+            ...chartConfig,
+            scales: {
+                ...chartConfig.scales,
+                y: {
+                    ...chartConfig.scales.y,
+                    min: 1,
+                    max: 10,
+                    ticks: {
+                        ...chartConfig.scales.y.ticks,
+                        stepSize: 1,
+                    },
+                },
+            },
+        },
+    });
+}
