@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class)->except(['show']);
     Route::resource('expenses', ExpenseController::class)->except(['show']);
     Route::resource('notes', NoteController::class)->except(['show']);
+    Route::post('/notes/{note}/toggle-pin', [NoteController::class, 'togglePin'])->name('notes.togglePin');
+    Route::post('/notes/{note}/archive', [NoteController::class, 'archive'])->name('notes.archive');
     Route::resource('moods', MoodController::class)->except(['show']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
