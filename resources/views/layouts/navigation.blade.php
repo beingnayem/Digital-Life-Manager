@@ -20,7 +20,7 @@
                 </div>
             </a>
 
-            <form class="shell-nav-search" method="GET" action="{{ route('dashboard') }}">
+            <form class="shell-nav-search" method="GET" action="{{ route('search') }}">
                 <label for="global-search" class="sr-only">Search</label>
                 <div class="relative w-full">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">

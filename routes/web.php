@@ -8,6 +8,7 @@ use App\Http\Controllers\MoodController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/notes/{note}/archive', [NoteController::class, 'archive'])->name('notes.archive');
     Route::resource('moods', MoodController::class)->except(['show']);
     Route::resource('budgets', BudgetController::class)->except(['show']);
+
+    // Global search
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
