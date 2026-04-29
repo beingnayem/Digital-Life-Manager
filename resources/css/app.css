@@ -226,6 +226,14 @@
 		@apply form-input w-full max-w-2xl rounded-xl bg-slate-50/80 border-slate-200;
 	}
 
+	.shell-nav-search .absolute.z-50 {
+		@apply min-w-[18rem];
+	}
+
+	.shell-nav-search .suggestion-item mark {
+		@apply bg-yellow-100 rounded px-1;
+	}
+
 	.note-grid {
 		@apply grid gap-4 md:gap-5 md:grid-cols-2 xl:grid-cols-3;
 	}
