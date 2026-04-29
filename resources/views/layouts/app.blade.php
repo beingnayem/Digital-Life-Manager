@@ -87,26 +87,24 @@
                     </div>
 
                     <div class="shell-sidebar-footer">
-                        <div class="flex flex-col gap-3">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                    </span>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-900">{{ auth()->user()->name }}</p>
-                                        <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
-                                    </div>
+                        <div class="shell-account-card">
+                            <div class="shell-account-head">
+                                <span class="shell-account-avatar" aria-hidden="true">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="shell-account-name">{{ auth()->user()->name }}</p>
+                                    <p class="shell-account-email">{{ auth()->user()->email }}</p>
                                 </div>
+                            </div>
 
-                                <div class="hidden lg:flex lg:flex-col lg:items-end lg:gap-2">
-                                    <a href="{{ route('profile.edit') }}" class="btn-secondary">Profile</a>
+                            <div class="shell-account-actions">
+                                <a href="{{ route('profile.edit') }}" class="btn-secondary w-full">Profile</a>
 
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="btn-danger">Log Out</button>
-                                    </form>
-                                </div>
+                                <form method="POST" action="{{ route('logout') }}" class="w-full">
+                                    @csrf
+                                    <button type="submit" class="btn-danger w-full">Log Out</button>
+                                </form>
                             </div>
                         </div>
                     </div>

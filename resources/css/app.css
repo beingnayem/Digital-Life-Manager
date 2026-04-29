@@ -85,6 +85,31 @@
 		@apply border-t border-slate-200/60 p-6;
 	}
 
+	.shell-account-card {
+		@apply rounded-2xl border border-slate-200/70 bg-white/90 p-4;
+		box-shadow: 0 10px 28px -20px rgba(15, 23, 42, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+	}
+
+	.shell-account-head {
+		@apply flex items-center gap-3 min-w-0;
+	}
+
+	.shell-account-avatar {
+		@apply flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700 ring-1 ring-primary-100;
+	}
+
+	.shell-account-name {
+		@apply text-sm font-semibold text-slate-900 truncate;
+	}
+
+	.shell-account-email {
+		@apply mt-0.5 text-xs text-slate-500 truncate;
+	}
+
+	.shell-account-actions {
+		@apply mt-4 space-y-2;
+	}
+
 	.shell-sidebar-note {
 		@apply rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 p-4;
 		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
