@@ -27,24 +27,60 @@ class SearchController extends Controller
         $budgets = collect();
 
         if ($q !== '') {
-            $userId = $request->user()->id;
+            $user = $request->user();
+            $userId = $user->id;
 
-            $tasks = Task::search($q)
-                ->where('user_id', $userId)
-                ->orderBy('due_date', 'asc')
-                ->paginate($perPage, 'page', $page);
+            try {
+                // Try indexed search (Meilisearch). If Meili is down this will throw.
+                $tasks = Task::search($q)
+                    ->where('user_id', $userId)
+                    ->orderBy('due_date', 'asc')
+                    ->paginate($perPage, 'page', $page);
 
-            $notes = Note::search($q)
-                ->where('user_id', $userId)
-                ->paginate($perPage, 'page', $page);
+                $notes = Note::search($q)
+                    ->where('user_id', $userId)
+                    ->paginate($perPage, 'page', $page);
 
-            $expenses = Expense::search($q)
-                ->where('user_id', $userId)
-                ->paginate($perPage, 'page', $page);
+                $expenses = Expense::search($q)
+                    ->where('user_id', $userId)
+                    ->paginate($perPage, 'page', $page);
 
-            $budgets = Budget::search($q)
-                ->where('user_id', $userId)
-                ->paginate($perPage, 'page', $page);
+                $budgets = Budget::search($q)
+                    ->where('user_id', $userId)
+                    ->paginate($perPage, 'page', $page);
+            } catch (\Throwable $e) {
+                // Fallback to simple DB LIKE search when search engine isn't available.
+                $tasks = $user->tasks()
+                    ->where(function ($qb) use ($q) {
+                        $qb->where('title', 'like', "%{$q}%")
+                           ->orWhere('description', 'like', "%{$q}%");
+                    })
+                    ->orderBy('due_date', 'asc')
+                    ->paginate($perPage, ['*'], 'page', $page);
+
+                $notes = $user->notes()
+                    ->where(function ($qb) use ($q) {
+                        $qb->where('title', 'like', "%{$q}%")
+                           ->orWhere('content', 'like', "%{$q}%");
+                    })
+                    ->latest('updated_at')
+                    ->paginate($perPage, ['*'], 'page', $page);
+
+                $expenses = $user->expenses()
+                    ->where(function ($qb) use ($q) {
+                        $qb->where('description', 'like', "%{$q}%")
+                           ->orWhere('category', 'like', "%{$q}%");
+                    })
+                    ->latest('date')
+                    ->paginate($perPage, ['*'], 'page', $page);
+
+                $budgets = $user->budgets()
+                    ->where(function ($qb) use ($q) {
+                        $qb->where('name', 'like', "%{$q}%")
+                           ->orWhere('category', 'like', "%{$q}%");
+                    })
+                    ->paginate($perPage, ['*'], 'page', $page);
+            }
         }
 
         return view('search.results', compact('q', 'tasks', 'notes', 'expenses', 'budgets'));
@@ -61,13 +97,25 @@ class SearchController extends Controller
         if ($q !== '' && $request->user()) {
             $user = $request->user();
 
-            $taskTitles = $user->tasks()->where('title', 'like', "%{$q}%")->pluck('title')->toArray();
-            $noteTitles = $user->notes()->where('title', 'like', "%{$q}%")->pluck('title')->toArray();
-            $expenseDesc = $user->expenses()->where('description', 'like', "%{$q}%")->pluck('description')->toArray();
-            $categories = $user->expenses()->where('category', 'like', "%{$q}%")->distinct()->pluck('category')->toArray();
+            try {
+                // Try searching indexed records for suggestions
+                $taskTitles = Task::search($q)->where('user_id', $user->id)->take(6)->get()->pluck('title')->toArray();
+                $noteTitles = Note::search($q)->where('user_id', $user->id)->take(6)->get()->pluck('title')->toArray();
+                $expenseDesc = Expense::search($q)->where('user_id', $user->id)->take(6)->get()->pluck('description')->toArray();
+                $categories = $user->expenses()->where('category', 'like', "%{$q}%")->distinct()->pluck('category')->toArray();
 
-            $results = array_values(array_unique(array_merge($taskTitles, $noteTitles, $expenseDesc, $categories)));
-            $results = array_slice($results, 0, 8);
+                $results = array_values(array_unique(array_merge($taskTitles, $noteTitles, $expenseDesc, $categories)));
+                $results = array_slice($results, 0, 8);
+            } catch (\Throwable $e) {
+                // Fallback to DB queries for suggestions
+                $taskTitles = $user->tasks()->where('title', 'like', "%{$q}%")->pluck('title')->toArray();
+                $noteTitles = $user->notes()->where('title', 'like', "%{$q}%")->pluck('title')->toArray();
+                $expenseDesc = $user->expenses()->where('description', 'like', "%{$q}%")->pluck('description')->toArray();
+                $categories = $user->expenses()->where('category', 'like', "%{$q}%")->distinct()->pluck('category')->toArray();
+
+                $results = array_values(array_unique(array_merge($taskTitles, $noteTitles, $expenseDesc, $categories)));
+                $results = array_slice($results, 0, 8);
+            }
         }
 
         return response()->json($results);
