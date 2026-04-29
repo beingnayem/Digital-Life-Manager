@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql zip
 
 # =========================
-# Install Node.js (for Vite)
+# Install Node.js (for Vite build)
 # =========================
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
@@ -19,60 +19,49 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN a2enmod rewrite
 
 # =========================
-# Working directory
+# Set working directory
 # =========================
 WORKDIR /var/www/html
 
 # =========================
-# Copy project
+# Copy project files
 # =========================
 COPY . .
+
+# =========================
+# Install frontend + build Vite assets
+# =========================
+RUN npm install
+RUN npm run build
 
 # =========================
 # Install Composer
 # =========================
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# =========================
-# Install PHP dependencies
-# =========================
 RUN composer install --no-dev --optimize-autoloader
 
 # =========================
-# Install frontend dependencies + build Vite
-# =========================
-RUN npm install
-RUN npm run build
-
-# =========================
-# Laravel optimizations
-# =========================
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && php artisan cache:clear
-
-# =========================
-# Permissions fix
+# Permissions (VERY IMPORTANT)
 # =========================
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
 # =========================
-# Apache document root fix
+# Laravel public directory fix
 # =========================
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
 # =========================
-# Render PORT fix (IMPORTANT)
+# Render PORT fix (CRITICAL)
 # =========================
 RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf
 RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
 # =========================
-# Expose port for Render
+# Expose Render port
 # =========================
 EXPOSE 10000
 
