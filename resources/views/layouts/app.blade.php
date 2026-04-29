@@ -87,9 +87,27 @@
                     </div>
 
                     <div class="shell-sidebar-footer">
-                        <div class="shell-sidebar-note">
-                            <p class="text-sm font-semibold text-slate-900">{{ auth()->user()->name ?? config('app.name', 'Laravel') }}</p>
-                            <p class="mt-1 text-xs text-slate-500">Profile and account actions live in the top bar.</p>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-900">{{ auth()->user()->name }}</p>
+                                        <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="hidden lg:flex lg:flex-col lg:items-end lg:gap-2">
+                                    <a href="{{ route('profile.edit') }}" class="btn-secondary">Profile</a>
+
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="btn-danger">Log Out</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
