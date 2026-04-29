@@ -19,6 +19,7 @@ class Task extends Model
         'priority',
         'status',
         'due_date',
+        'reminder_sent_at',
         'completed_at',
         'estimated_hours',
         'actual_hours',
@@ -30,6 +31,7 @@ class Task extends Model
 
     protected $casts = [
         'due_date' => 'datetime',
+        'reminder_sent_at' => 'datetime',
         'completed_at' => 'datetime',
         'is_recurring' => 'boolean',
         'tags' => 'array',

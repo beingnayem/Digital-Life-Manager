@@ -35,14 +35,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('month_year');
             $table->index(['user_id', 'month_year']);
-            
-            // One budget per category per month per user
             $table->unique(['user_id', 'category', 'month_year']);
-            
-            // Constraints
-            $table->check('limit_amount > 0');
-            $table->check('spent_amount >= 0');
-            $table->check('alert_threshold BETWEEN 0 AND 100');
         });
     }
 

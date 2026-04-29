@@ -2,12 +2,11 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Tasks</p>
-                <h1 class="mt-1 text-2xl font-semibold text-slate-900">Task Manager</h1>
+                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Task Manager</p>
             </div>
             <div class="flex items-center gap-3">
                 <form method="GET" action="{{ route('tasks.index') }}" class="flex items-center gap-2">
-                    <select name="priority" class="form-input text-sm">
+                    <select name="priority" class="form-input min-w-[11rem] text-sm">
                         <option value="">All priorities</option>
                         <option value="low" {{ request('priority')=='low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ request('priority')=='medium' ? 'selected' : '' }}>Medium</option>

@@ -16,7 +16,7 @@
                 <x-application-logo class="h-9 w-9 rounded-2xl bg-primary-50 p-2 text-primary-600" />
                 <div class="hidden sm:block">
                     <p class="text-sm font-semibold text-slate-900">{{ config('app.name', 'Laravel') }}</p>
-                    <p class="text-xs text-slate-500">Clean SaaS workspace</p>
+                    <p class="text-xs text-slate-500">Your Complete Personal Organizer</p>
                 </div>
             </a>
 
@@ -39,10 +39,21 @@
             </form>
 
             <div class="ms-auto flex items-center gap-3">
-                <div class="hidden xl:block text-right">
-                    <p class="text-sm font-semibold text-slate-900">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
-                </div>
+                @php
+                    $monthlyBudgetAlertCount = auth()->user()->budgets()
+                        ->active()
+                        ->where('month_year', now()->format('Y-m'))
+                        ->whereNotNull('alert_sent_at')
+                        ->count();
+                @endphp
+
+                @if ($monthlyBudgetAlertCount > 0)
+                    <span class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm">
+                        <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                        Budget alert
+                        <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">{{ $monthlyBudgetAlertCount }}</span>
+                    </span>
+                @endif
 
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -38,11 +37,7 @@ class NewPasswordController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email:rfc,dns'],
-            'password' => [
-                'required',
-                'confirmed',
-                Rules\Password::min(12)->mixedCase()->letters()->numbers()->symbols()->uncompromised(),
-            ],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we

@@ -17,12 +17,14 @@ class Budget extends Model
         'spent_amount',
         'alert_threshold',
         'is_active',
+        'alert_sent_at',
     ];
 
     protected $casts = [
         'limit_amount' => 'decimal:2',
         'spent_amount' => 'decimal:2',
         'is_active' => 'boolean',
+        'alert_sent_at' => 'datetime',
     ];
 
     /**
@@ -99,5 +101,31 @@ class Budget extends Model
             ->sum('amount');
 
         $this->update(['spent_amount' => $total]);
+
+        return $this;
+    }
+
+    /**
+     * Refresh totals and send an alert once if the monthly limit is exceeded.
+     */
+    public function refreshAndAlertIfNeeded(): void
+    {
+        $this->recalculateSpentAmount();
+
+        if ($this->spent_amount < $this->limit_amount) {
+            if ($this->alert_sent_at !== null) {
+                $this->forceFill(['alert_sent_at' => null])->saveQuietly();
+            }
+
+            return;
+        }
+
+        if ($this->alert_sent_at !== null || ! $this->user) {
+            return;
+        }
+
+        $this->user->notify(new \App\Notifications\BudgetLimitExceededNotification($this));
+
+        $this->forceFill(['alert_sent_at' => now()])->saveQuietly();
     }
 }

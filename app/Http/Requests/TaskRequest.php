@@ -21,12 +21,14 @@ class TaskRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isCreateRequest = $this->isMethod('post');
+
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [$isCreateRequest ? 'required' : 'sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:100'],
-            'priority' => ['required', 'in:low,medium,high,urgent'],
-            'status' => ['required', 'in:not_started,in_progress,completed,archived,cancelled'],
+            'priority' => [$isCreateRequest ? 'required' : 'sometimes', 'in:low,medium,high,urgent'],
+            'status' => [$isCreateRequest ? 'required' : 'sometimes', 'in:not_started,in_progress,completed,archived,cancelled'],
             'due_date' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_hours' => ['nullable', 'integer', 'min:0'],

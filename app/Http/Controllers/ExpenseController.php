@@ -68,6 +68,7 @@ class ExpenseController extends Controller
             'trend_30day' => $this->get30DayTrend($request->user()),
             'category_breakdown' => $this->getCategoryBreakdown($request->user()),
             'status_breakdown' => $this->getStatusBreakdown($request->user()),
+            'payment_method_breakdown' => $this->getPaymentMethodBreakdown($request->user()),
         ];
 
         return view('expenses.index', compact('expenses', 'categories', 'chartData'));
@@ -237,5 +238,37 @@ class ExpenseController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Get expense breakdown by payment method.
+     */
+    private function getPaymentMethodBreakdown($user)
+    {
+        $paymentMethods = $user->expenses()
+            ->confirmed()
+            ->whereNotNull('payment_method')
+            ->where('payment_method', '!=', '')
+            ->groupBy('payment_method')
+            ->selectRaw('payment_method, SUM(amount) as total')
+            ->orderByDesc('total')
+            ->get();
+
+        $methodColors = [
+            'cash' => '#16a34a',
+            'card' => '#2563eb',
+            'bank_transfer' => '#7c3aed',
+            'mobile_payment' => '#db2777',
+            'check' => '#f59e0b',
+            'other' => '#64748b',
+        ];
+
+        return $paymentMethods->map(function ($method) use ($methodColors) {
+            return [
+                'label' => ucwords(str_replace('_', ' ', (string) $method->payment_method)),
+                'value' => round((float) $method->total, 2),
+                'color' => $methodColors[$method->payment_method] ?? '#94a3b8',
+            ];
+        })->values();
     }
 }

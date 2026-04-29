@@ -30,6 +30,28 @@ class Expense extends Model
         'tags' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        $syncBudgetAlerts = function (Expense $expense): void {
+            if (! $expense->date || ! $expense->category) {
+                return;
+            }
+
+            $budget = Budget::where('user_id', $expense->user_id)
+                ->where('category', $expense->category)
+                ->where('month_year', $expense->date->format('Y-m'))
+                ->first();
+
+            if ($budget) {
+                $budget->refreshAndAlertIfNeeded();
+            }
+        };
+
+        static::saved($syncBudgetAlerts);
+        static::deleted($syncBudgetAlerts);
+        static::restored($syncBudgetAlerts);
+    }
+
     /**
      * Get the user that owns the expense.
      */

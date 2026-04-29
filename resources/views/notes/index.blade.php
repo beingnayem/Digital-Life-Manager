@@ -2,8 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Knowledge</p>
-                <h1 class="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Notes</h1>
+                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Notes</p>
             </div>
             <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary">+ Add Note</button>
         </div>
@@ -17,7 +16,7 @@
                         <input name="search" value="{{ request('search') }}" placeholder="Search notes..." class="note-search text-sm" />
 
                         <div class="flex flex-wrap items-center gap-2">
-                            <select name="category" class="form-input rounded-xl border-slate-200 text-sm">
+                            <select name="category" class="form-input min-w-[11rem] rounded-xl border-slate-200 text-sm">
                                 <option value="">All categories</option>
                                 @foreach ($categories as $cat)
                                     <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>

@@ -95,21 +95,35 @@ function resetModalForm(form, resource) {
     form.reset();
 }
 
-async function submitAjaxForm(form, resource) {
+async function submitAjaxForm(form, resource, formData) {
     const response = await fetch(form.action, {
         method: 'POST',
         headers: {
             ...API_HEADERS,
             'X-CSRF-TOKEN': getCsrfToken(),
         },
-        body: new FormData(form),
+        body: formData,
     });
 
+    const contentType = response.headers.get('content-type') || '';
+    const data = contentType.includes('application/json') ? await response.json() : null;
+
     if (!response.ok) {
-        throw new Error('Request failed');
+        if (response.status === 422 && data?.errors) {
+            const errorMessages = Object.values(data.errors).flat().join('\n');
+            throw new Error(errorMessages);
+        }
+
+        throw new Error(data?.message || 'Unable to save changes.');
     }
 
-    return response.json();
+    return data ?? {};
+}
+
+function dispatchToast(type, title, message) {
+    window.dispatchEvent(new CustomEvent('app:toast', {
+        detail: { type, title, message },
+    }));
 }
 
 function upsertRow(resource, rowHtml, recordId, shouldPrepend = false) {
@@ -185,24 +199,44 @@ function wireAjaxForms() {
         if (!isAjaxResource(resource)) return;
 
         event.preventDefault();
+        const formData = new FormData(form);
+
         form.querySelectorAll('button, input, select, textarea').forEach((element) => {
             element.disabled = true;
         });
         setLoadingState(form, true);
 
         try {
-            const data = await submitAjaxForm(form, resource);
+            const data = await submitAjaxForm(form, resource, formData);
 
             if (data.row_html) {
                 upsertRow(resource, data.row_html, data.task?.id ?? data.expense?.id ?? form.dataset.recordId, form.dataset.ajaxForm ? true : false);
             }
 
+            if (data.message === 'task-created') {
+                dispatchToast('success', 'Task created', 'Your task was saved successfully.');
+            }
+
+            if (data.message === 'task-updated') {
+                dispatchToast('success', 'Task updated', 'Your task was updated successfully.');
+            }
+
+            if (data.message === 'expense-created') {
+                dispatchToast('success', 'Expense created', 'Your expense was saved successfully.');
+            }
+
+            if (data.message === 'expense-updated') {
+                dispatchToast('success', 'Expense updated', 'Your expense was updated successfully.');
+            }
+
             if (data.task_id) {
                 removeRow(resource, data.task_id);
+                dispatchToast('success', 'Task deleted', 'The task was removed successfully.');
             }
 
             if (data.expense_id) {
                 removeRow(resource, data.expense_id);
+                dispatchToast('success', 'Expense deleted', 'The expense was removed successfully.');
             }
 
             if (resource === 'expense' && (data.row_html || data.expense_id)) {
@@ -215,7 +249,7 @@ function wireAjaxForms() {
             }
         } catch (error) {
             const message = error?.message || 'Unable to save changes.';
-            window.dispatchEvent(new CustomEvent('app:toast', { detail: { type: 'error', message } }));
+            dispatchToast('error', 'Save failed', message);
         } finally {
             setLoadingState(form, false);
             form.querySelectorAll('button, input, select, textarea').forEach((element) => {

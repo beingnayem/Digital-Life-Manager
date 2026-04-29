@@ -1,10 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Account</p>
-            <h2 class="mt-1 text-2xl font-semibold leading-tight text-slate-900">
-                {{ __('Profile Management') }}
-            </h2>
+            <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Profile Management</p>
         </div>
     </x-slot>
 

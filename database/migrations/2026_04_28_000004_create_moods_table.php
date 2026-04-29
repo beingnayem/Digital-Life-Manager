@@ -50,15 +50,7 @@ return new class extends Migration
             $table->index('mood_level');
             $table->index('created_at');
             $table->index(['user_id', 'recorded_date']); // Composite index
-            
-            // Constraints - One mood per user per day
             $table->unique(['user_id', 'recorded_date']);
-            
-            // Check constraints work in MySQL 8.0+
-            $table->check('mood_level BETWEEN 1 AND 10');
-            $table->check('energy_level IS NULL OR energy_level BETWEEN 1 AND 10');
-            $table->check('stress_level IS NULL OR stress_level BETWEEN 1 AND 10');
-            $table->check('focus_level IS NULL OR focus_level BETWEEN 1 AND 10');
         });
     }
 

@@ -2,10 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fade-rise {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes soft-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
 @layer base {
 	body {
-		@apply font-sans antialiased text-slate-900 bg-slate-50;
-		background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 28%), radial-gradient(circle at top right, rgba(16, 185, 129, 0.05), transparent 25%);
+		@apply font-sans antialiased text-slate-900 bg-slate-50 overflow-x-hidden;
+		background-image:
+			radial-gradient(circle at 5% 0%, rgba(99, 102, 241, 0.09), transparent 34%),
+			radial-gradient(circle at 95% 0%, rgba(14, 165, 233, 0.08), transparent 30%),
+			linear-gradient(180deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 0.92) 100%);
+		background-attachment: fixed;
+	}
+
+	img {
+		@apply max-w-full h-auto;
 	}
 
 	[x-cloak] {
@@ -14,16 +44,25 @@
 }
 
 @layer components {
+	.app-logo {
+		@apply w-6 h-6 max-w-full object-contain;
+	}
+
+	.app-logo-guest {
+		@apply w-[8.5rem] h-[8.5rem];
+	}
+
 	.shell-app {
-		@apply min-h-screen bg-slate-50 text-slate-900 lg:flex;
+		@apply min-h-screen bg-transparent text-slate-900 lg:flex;
 	}
 
 	.shell-sidebar {
-		@apply hidden lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-slate-200/60 lg:bg-white/95 lg:backdrop-blur-xl;
+		@apply hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-slate-200/70 lg:bg-white/85 lg:backdrop-blur-2xl;
+		box-shadow: 8px 0 28px -24px rgba(15, 23, 42, 0.35);
 	}
 
 	.shell-sidebar-brand {
-		@apply flex items-center gap-3 border-b border-slate-200/60 px-6 py-5;
+		@apply flex items-center gap-3 border-b border-slate-200/70 px-6 py-5;
 	}
 
 	.shell-sidebar-title {
@@ -35,7 +74,7 @@
 	}
 
 	.shell-sidebar-section {
-		@apply flex-1 px-4 py-6;
+		@apply flex-1 px-4 py-7;
 	}
 
 	.shell-sidebar-label {
@@ -47,15 +86,17 @@
 	}
 
 	.shell-sidebar-note {
-		@apply rounded-2xl bg-slate-50 p-4;
+		@apply rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 p-4;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 	}
 
 	.shell-main {
-		@apply flex min-w-0 flex-1 flex-col;
+		@apply flex min-w-0 flex-1 flex-col lg:ml-72;
 	}
 
 	.shell-nav {
-		@apply sticky top-0 z-30 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl;
+		@apply sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl;
+		box-shadow: 0 10px 30px -30px rgba(15, 23, 42, 0.4);
 	}
 
 	.shell-nav-inner {
@@ -68,7 +109,7 @@
 
 	/* Spacing system */
 	.page {
-		@apply py-10 sm:py-12;
+		@apply py-8 sm:py-10 lg:py-12;
 	}
 
 	.page-container {
@@ -77,12 +118,13 @@
 
 	/* Cards */
 	.card {
-		@apply bg-white border border-slate-200/60 rounded-xl shadow-sm overflow-hidden transition-all duration-200 ease-out;
-		@apply hover:-translate-y-0.5 hover:shadow-lg hover:border-slate-200;
+		@apply bg-white/90 border border-slate-200/70 rounded-2xl shadow-sm overflow-hidden transition-all duration-300 ease-out;
+		@apply hover:-translate-y-0.5 hover:shadow-xl hover:border-slate-200;
+		animation: soft-pop 0.35s ease-out both;
 	}
 
 	.card-body {
-		@apply p-6;
+		@apply p-5 sm:p-6;
 	}
 
 	.card-body-sm {
@@ -91,17 +133,18 @@
 
 	/* Buttons */
 	.btn {
-		@apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ease-out;
+		@apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-out;
 		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
 		@apply disabled:pointer-events-none disabled:opacity-50;
 	}
 
 	.btn-primary {
-		@apply btn bg-primary-600 text-white shadow-sm hover:bg-primary-500 hover:shadow-md active:bg-primary-700;
+		@apply btn bg-primary-600 text-white shadow-sm hover:bg-primary-500 hover:shadow-lg active:bg-primary-700;
+		background-image: linear-gradient(135deg, rgba(99, 102, 241, 1), rgba(79, 70, 229, 1));
 	}
 
 	.btn-secondary {
-		@apply btn bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 hover:border-slate-400 active:bg-slate-100;
+		@apply btn bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 hover:border-slate-400 hover:shadow-md active:bg-slate-100;
 	}
 
 	.btn-danger {
@@ -114,8 +157,12 @@
 	}
 
 	.form-input {
-		@apply rounded-lg border-slate-300 shadow-sm transition-all duration-200 ease-out;
-		@apply hover:border-slate-400 focus:border-primary-500 focus:ring-primary-500;
+		@apply rounded-xl border-slate-300 bg-white/90 shadow-sm transition-all duration-200 ease-out;
+		@apply min-h-[2.75rem] px-3 hover:border-slate-400 focus:border-primary-500 focus:ring-primary-500;
+	}
+
+	select.form-input {
+		@apply pr-9;
 	}
 
 	.form-checkbox {
@@ -128,7 +175,8 @@
 	}
 
 	.empty-state {
-		@apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-12 text-center;
+		@apply flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/85 px-6 py-12 text-center;
+		animation: fade-rise 0.4s ease-out both;
 	}
 
 	.empty-state-icon {
@@ -151,6 +199,14 @@
 		@apply pointer-events-none opacity-70;
 	}
 
+	.toast-enter {
+		@apply translate-y-2 opacity-0;
+	}
+
+	.toast-enter-active {
+		@apply transition duration-200 ease-out;
+	}
+
 	/* Links */
 	.link {
 		@apply underline text-sm text-slate-600 hover:text-slate-900;
@@ -171,12 +227,13 @@
 	}
 
 	.note-grid {
-		@apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
+		@apply grid gap-4 md:gap-5 md:grid-cols-2 xl:grid-cols-3;
 	}
 
 	.note-card {
-		@apply rounded-2xl border border-slate-200/70 bg-white p-5 shadow-sm transition;
-		@apply hover:-translate-y-0.5 hover:shadow-md;
+		@apply rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-sm transition-all duration-300;
+		@apply hover:-translate-y-1 hover:shadow-lg;
+		animation: fade-rise 0.35s ease-out both;
 	}
 
 	.note-card-title {
@@ -185,5 +242,12 @@
 
 	.note-card-content {
 		@apply mt-3 text-sm leading-6 text-slate-600;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation: none !important;
+		transition-duration: 0.01ms !important;
 	}
 }

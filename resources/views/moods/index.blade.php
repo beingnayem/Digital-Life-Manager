@@ -16,8 +16,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Wellbeing</p>
-                <h1 class="mt-1 text-2xl font-semibold text-slate-900">Mood Tracker</h1>
+                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Mood Tracker</p>
             </div>
             <button x-data @click="$dispatch('open-mood-modal', { mode: 'create' })" class="btn-primary">+ Add Mood</button>
         </div>

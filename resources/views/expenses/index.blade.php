@@ -2,8 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Finances</p>
-                <h1 class="mt-1 text-2xl font-semibold text-slate-900">Expense Tracker</h1>
+                <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Expense Tracker</p>
             </div>
             <button x-data @click="$dispatch('open-expense-modal', { mode: 'create' })" class="btn-primary">+ New Expense</button>
         </div>
@@ -130,6 +129,15 @@
                         <h3 class="mb-4 text-sm font-semibold text-slate-900">By Status</h3>
                         <div class="flex h-64 items-center justify-center">
                             <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-4 text-sm font-semibold text-slate-900">By Payment Method</h3>
+                        <div class="flex h-64 items-center justify-center">
+                            <canvas id="paymentMethodChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -351,6 +359,33 @@
                         scales: {
                             x: {
                                 ticks: { callback: v => '$' + v.toFixed(0) }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Payment Method Breakdown Chart
+            if (chartData.payment_method_breakdown && chartData.payment_method_breakdown.length > 0) {
+                const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
+                new Chart(paymentCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.payment_method_breakdown.map(d => d.label),
+                        datasets: [{
+                            data: chartData.payment_method_breakdown.map(d => d.value),
+                            backgroundColor: chartData.payment_method_breakdown.map(d => d.color),
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { padding: 12, font: { size: 12 } }
                             }
                         }
                     }

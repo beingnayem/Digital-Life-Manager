@@ -2,9 +2,6 @@
     <x-slot name="header">
         <div>
             <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Workspace overview</p>
-            <h2 class="mt-2 text-2xl font-semibold text-slate-900 leading-tight">
-                {{ __('Dashboard') }}
-            </h2>
         </div>
     </x-slot>
 
@@ -227,7 +224,7 @@
                             <a href="{{ route('tasks.index') }}" class="link text-xs">View all</a>
                         </div>
                         <div class="mt-4 space-y-3">
-                            @forelse ($stats['recent_tasks'] as $task)
+                            @forelse ($stats['recent_tasks']->take(3) as $task)
                                 <a href="{{ route('tasks.edit', $task) }}" class="group block truncate rounded-lg p-3 transition hover:bg-slate-50">
                                     <div class="flex items-start gap-3">
                                         <div class="mt-1 shrink-0">
@@ -270,7 +267,7 @@
                             <a href="{{ route('expenses.index') }}" class="link text-xs">View all</a>
                         </div>
                         <div class="mt-4 space-y-3">
-                            @forelse ($stats['recent_expenses'] as $expense)
+                            @forelse ($stats['recent_expenses']->take(3) as $expense)
                                 <a href="{{ route('expenses.edit', $expense) }}" class="group block truncate rounded-lg p-3 transition hover:bg-slate-50">
                                     <div class="flex items-center justify-between gap-3">
                                         <div class="min-w-0 flex-1">
@@ -302,34 +299,37 @@
                     </div>
                 </div>
 
-                {{-- Recent Moods --}}
+                {{-- Recent Notes --}}
                 <div class="card">
                     <div class="card-body">
                         <div class="flex items-center justify-between pb-4 border-b border-slate-200/70">
-                            <h3 class="font-semibold text-slate-900">Mood Entries</h3>
-                            <a href="{{ route('moods.index') }}" class="link text-xs">View all</a>
+                            <h3 class="font-semibold text-slate-900">Recent Notes</h3>
+                            <a href="{{ route('notes.index') }}" class="link text-xs">View all</a>
                         </div>
                         <div class="mt-4 space-y-3">
-                            @forelse ($stats['recent_notes'] as $mood)
-                                <div class="rounded-lg bg-slate-50/50 p-3">
+                            @forelse ($stats['recent_notes']->take(3) as $note)
+                                <a href="{{ route('notes.edit', $note) }}" class="group block rounded-lg bg-slate-50/50 p-3 transition hover:bg-slate-100">
                                     <div class="flex items-center justify-between gap-3">
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-900">
-                                                Mood: <span class="text-primary-600">{{ $mood->mood_label ?? '—' }}</span>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-sm font-semibold text-slate-900 group-hover:text-primary-600">
+                                                {{ $note->title }}
                                             </p>
-                                            <p class="text-xs text-slate-500">{{ $mood->recorded_date?->format('M d, g:i A') ?? '—' }}</p>
+                                            <p class="text-xs text-slate-500">
+                                                {{ $note->category ? ucfirst($note->category) : 'General' }} · {{ $note->updated_at?->diffForHumans() ?? '—' }}
+                                            </p>
                                         </div>
-                                        <div class="shrink-0 rounded-full bg-primary-100 px-3 py-1 text-center">
-                                            <p class="text-sm font-bold text-primary-700">{{ $mood->mood_level ?? '—' }}</p>
+                                        <div class="shrink-0 rounded-full bg-primary-100 px-3 py-1 text-center text-xs font-semibold text-primary-700">
+                                            {{ $note->is_pinned ? 'Pinned' : 'Note' }}
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             @empty
-                                <p class="py-4 text-center text-sm text-slate-500">No mood entries yet</p>
+                                <p class="py-4 text-center text-sm text-slate-500">No recent notes yet</p>
                             @endforelse
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

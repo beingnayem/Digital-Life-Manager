@@ -60,9 +60,6 @@ return new class extends Migration
             $table->index('amount');
             $table->index('created_at');
             $table->index(['user_id', 'date']); // Composite: user expenses by date
-            
-            // Constraints
-            $table->check('amount > 0'); // Prevent negative amounts
         });
     }
 

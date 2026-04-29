@@ -1,4 +1,8 @@
 <x-guest-layout>
+    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        {{ __('Please verify your email.') }}
+    </div>
+
     <div class="mb-4 text-sm text-slate-600">
         {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
     </div>
