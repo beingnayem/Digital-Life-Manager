@@ -6,7 +6,7 @@
 
         <div class="grid gap-6 mt-4 lg:grid-cols-2">
             <div class="card">
-                <h2 class="font-semibold">Tasks ({{ $tasks->count() }})</h2>
+                <h2 class="font-semibold">Tasks</h2>
                 @if($tasks->isEmpty())
                     <p class="text-sm text-slate-500">No matching tasks.</p>
                 @else
@@ -18,11 +18,12 @@
                             </li>
                         @endforeach
                     </ul>
+                    <div class="mt-4">{{ $tasks->appends(request()->query())->links() }}</div>
                 @endif
             </div>
 
             <div class="card">
-                <h2 class="font-semibold">Notes ({{ $notes->count() }})</h2>
+                <h2 class="font-semibold">Notes</h2>
                 @if($notes->isEmpty())
                     <p class="text-sm text-slate-500">No matching notes.</p>
                 @else
@@ -34,11 +35,12 @@
                             </li>
                         @endforeach
                     </ul>
+                    <div class="mt-4">{{ $notes->appends(request()->query())->links() }}</div>
                 @endif
             </div>
 
             <div class="card">
-                <h2 class="font-semibold">Expenses ({{ $expenses->count() }})</h2>
+                <h2 class="font-semibold">Expenses</h2>
                 @if($expenses->isEmpty())
                     <p class="text-sm text-slate-500">No matching expenses.</p>
                 @else
@@ -50,11 +52,12 @@
                             </li>
                         @endforeach
                     </ul>
+                    <div class="mt-4">{{ $expenses->appends(request()->query())->links() }}</div>
                 @endif
             </div>
 
             <div class="card">
-                <h2 class="font-semibold">Budgets ({{ $budgets->count() }})</h2>
+                <h2 class="font-semibold">Budgets</h2>
                 @if($budgets->isEmpty())
                     <p class="text-sm text-slate-500">No matching budgets.</p>
                 @else
@@ -62,10 +65,11 @@
                         @foreach($budgets as $budget)
                             <li>
                                 <a href="{{ route('budgets.edit', $budget) }}" class="text-primary-600 hover:underline">{{ $budget->name }}</a>
-                                <div class="text-xs text-slate-500">{{ money($budget->limit_amount) }} • {{ $budget->frequency }}</div>
+                                <div class="text-xs text-slate-500">{{ money($budget->limit_amount) }} • {{ $budget->frequency ?? 'monthly' }}</div>
                             </li>
                         @endforeach
                     </ul>
+                    <div class="mt-4">{{ $budgets->appends(request()->query())->links() }}</div>
                 @endif
             </div>
         </div>

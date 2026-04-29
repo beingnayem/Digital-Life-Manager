@@ -18,45 +18,33 @@ class SearchController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
 
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 12;
+
         $tasks = collect();
         $notes = collect();
         $expenses = collect();
         $budgets = collect();
 
         if ($q !== '') {
-            $user = $request->user();
+            $userId = $request->user()->id;
 
-            $tasks = $user->tasks()
-                ->where(function ($qBuilder) use ($q) {
-                    $qBuilder->where('title', 'like', "%{$q}%")
-                             ->orWhere('description', 'like', "%{$q}%");
-                })
-                ->latest()
-                ->take(8)
-                ->get();
+            $tasks = Task::search($q)
+                ->where('user_id', $userId)
+                ->orderBy('due_date', 'asc')
+                ->paginate($perPage, 'page', $page);
 
-            $notes = $user->notes()
-                ->where(function ($qBuilder) use ($q) {
-                    $qBuilder->where('title', 'like', "%{$q}%")
-                             ->orWhere('content', 'like', "%{$q}%");
-                })
-                ->latest()
-                ->take(8)
-                ->get();
+            $notes = Note::search($q)
+                ->where('user_id', $userId)
+                ->paginate($perPage, 'page', $page);
 
-            $expenses = $user->expenses()
-                ->where(function ($qBuilder) use ($q) {
-                    $qBuilder->where('description', 'like', "%{$q}%")
-                             ->orWhere('category', 'like', "%{$q}%");
-                })
-                ->latest()
-                ->take(8)
-                ->get();
+            $expenses = Expense::search($q)
+                ->where('user_id', $userId)
+                ->paginate($perPage, 'page', $page);
 
-            $budgets = $user->budgets()
-                ->where('name', 'like', "%{$q}%")
-                ->take(6)
-                ->get();
+            $budgets = Budget::search($q)
+                ->where('user_id', $userId)
+                ->paginate($perPage, 'page', $page);
         }
 
         return view('search.results', compact('q', 'tasks', 'notes', 'expenses', 'budgets'));
