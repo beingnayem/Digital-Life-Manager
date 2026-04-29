@@ -76,8 +76,8 @@ class SearchController extends Controller
 
                 $budgets = $user->budgets()
                     ->where(function ($qb) use ($q) {
-                        $qb->where('name', 'like', "%{$q}%")
-                           ->orWhere('category', 'like', "%{$q}%");
+                        $qb->where('category', 'like', "%{$q}%")
+                           ->orWhere('month_year', 'like', "%{$q}%");
                     })
                     ->paginate($perPage, ['*'], 'page', $page);
             }

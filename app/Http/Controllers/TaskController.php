@@ -91,7 +91,19 @@ class TaskController extends Controller
         }
 
         $validated = $request->validated();
-        $task->update($validated);
+        try {
+            $task->update($validated);
+        } catch (\Throwable $e) {
+            // If search engine is down (Meili) or indexing fails, log and continue.
+            \Log::warning('Task update: search indexing failed, continuing. '.$e->getMessage());
+            // Ensure model is still updated in DB (attempt direct save fallback)
+            try {
+                $task->fill($validated)->saveQuietly();
+            } catch (\Throwable $ex) {
+                // If save also fails, rethrow so caller can see it.
+                throw $ex;
+            }
+        }
 
         if ($request->expectsJson()) {
             $task->refresh();
