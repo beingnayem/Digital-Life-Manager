@@ -70,7 +70,6 @@
                             ['label' => 'Budgets', 'route' => 'budgets.index', 'active' => 'budgets.*'],
                             ['label' => 'Notes', 'route' => 'notes.index', 'active' => 'notes.*'],
                             ['label' => 'Mood', 'route' => 'moods.index', 'active' => 'moods.*'],
-                            ['label' => 'Profile', 'route' => 'profile.edit', 'active' => 'profile.*'],
                         ];
                     @endphp
 
