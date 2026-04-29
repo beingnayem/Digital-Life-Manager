@@ -123,6 +123,17 @@
 		animation: soft-pop 0.35s ease-out both;
 	}
 
+	/* Improve spacing when cards are placed in grid columns (search, dashboard, lists) */
+	.grid > .card {
+		@apply my-3;
+	}
+
+	@media (min-width: 1024px) {
+		.grid > .card {
+			@apply mx-2;
+		}
+	}
+
 	.card-body {
 		@apply p-5 sm:p-6;
 	}
