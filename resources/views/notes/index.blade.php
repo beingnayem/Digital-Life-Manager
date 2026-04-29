@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="page-header">
             <div>
                 <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Notes</p>
             </div>
-            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary">+ Add Note</button>
+            <button x-data @click="$dispatch('open-note-modal', { mode: 'create' })" class="btn-primary w-full sm:w-auto">+ Add Note</button>
         </div>
     </x-slot>
 
@@ -98,8 +98,8 @@
     <div x-data x-cloak @open-note-modal.window="(e) => { $store.noteModal.open = true; $store.noteModal.mode = e.detail.mode; if(e.detail.mode === 'edit') { $store.noteModal.note = e.detail.note; } else { $store.noteModal.note = { title: '', content: '', category: '' }; } }">
         <div x-show="$store.noteModal.open" class="fixed inset-0 z-50 flex items-center justify-center">
             <div class="fixed inset-0 bg-black/40" @click="$store.noteModal.open=false"></div>
-            <div class="relative w-full max-w-3xl">
-                <div class="card">
+            <div class="modal-shell max-w-3xl">
+                <div class="card modal-card">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900" x-text="$store.noteModal.mode === 'create' ? 'Create Note' : 'Edit Note'"></h3>

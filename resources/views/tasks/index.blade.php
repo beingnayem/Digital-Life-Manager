@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="page-header">
             <div>
                 <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Task Manager</p>
             </div>
-            <div class="flex items-center gap-3">
-                <form method="GET" action="{{ route('tasks.index') }}" class="flex items-center gap-2">
-                    <select name="priority" class="form-input min-w-[11rem] text-sm">
+            <div class="page-header-actions">
+                <form method="GET" action="{{ route('tasks.index') }}" class="form-row-responsive w-full md:w-auto">
+                    <select name="priority" class="form-input w-full sm:min-w-[11rem] text-sm">
                         <option value="">All priorities</option>
                         <option value="low" {{ request('priority')=='low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ request('priority')=='medium' ? 'selected' : '' }}>Medium</option>
@@ -14,18 +14,18 @@
                         <option value="urgent" {{ request('priority')=='urgent' ? 'selected' : '' }}>Urgent</option>
                     </select>
 
-                    <select name="status" class="form-input text-sm">
+                    <select name="status" class="form-input w-full sm:w-auto text-sm">
                         <option value="">All status</option>
                         <option value="not_started" {{ request('status')=='not_started' ? 'selected' : '' }}>Not started</option>
                         <option value="in_progress" {{ request('status')=='in_progress' ? 'selected' : '' }}>In progress</option>
                         <option value="completed" {{ request('status')=='completed' ? 'selected' : '' }}>Completed</option>
                     </select>
 
-                    <input name="search" value="{{ request('search') }}" placeholder="Search title" class="form-input text-sm px-3" />
+                    <input name="search" value="{{ request('search') }}" placeholder="Search title" class="form-input w-full sm:w-auto text-sm px-3" />
                     <button type="submit" class="btn-secondary">Filter</button>
                 </form>
 
-                <button x-data @click="$dispatch('open-task-modal', { mode: 'create' })" class="btn-primary">+ New Task</button>
+                <button x-data @click="$dispatch('open-task-modal', { mode: 'create' })" class="btn-primary w-full sm:w-auto">+ New Task</button>
             </div>
         </div>
     </x-slot>
@@ -75,8 +75,8 @@
     <div x-data x-cloak @open-task-modal.window="(e) => { $store.taskModal.open = true; $store.taskModal.mode = e.detail.mode; if(e.detail.mode === 'edit') { $store.taskModal.task = e.detail.task; } else { $store.taskModal.task = { title: '', description: '', priority: 'medium', status: 'not_started', due_date: '' }; } }">
         <div x-show="$store.taskModal.open" class="fixed inset-0 z-50 flex items-center justify-center">
             <div class="fixed inset-0 bg-black/40" @click="$store.taskModal.open=false"></div>
-            <div class="relative w-full max-w-2xl">
-                <div class="card">
+            <div class="modal-shell max-w-2xl">
+                <div class="card modal-card">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900" x-text="$store.taskModal.mode === 'create' ? 'Add Task' : 'Edit Task'"></h3>
@@ -99,7 +99,7 @@
                                 <input name="due_date" type="date" x-model="$store.taskModal.task.due_date" class="form-input" />
                             </div>
 
-                            <div class="flex gap-3">
+                            <div class="grid gap-3 sm:grid-cols-2">
                                 <div class="flex-1">
                                     <label class="form-label">Priority</label>
                                     <select name="priority" x-model="$store.taskModal.task.priority" class="form-input w-full">
@@ -109,9 +109,9 @@
                                         <option value="urgent">Urgent</option>
                                     </select>
                                 </div>
-                                <div>
+                                <div class="sm:col-span-1">
                                     <label class="form-label">Status</label>
-                                    <select name="status" x-model="$store.taskModal.task.status" class="form-input w-48">
+                                    <select name="status" x-model="$store.taskModal.task.status" class="form-input w-full">
                                         <option value="not_started">Not started</option>
                                         <option value="in_progress">In progress</option>
                                         <option value="completed">Completed</option>

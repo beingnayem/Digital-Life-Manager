@@ -50,40 +50,11 @@
                 @if ($monthlyBudgetAlertCount > 0)
                     <span class="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm">
                         <span class="h-2 w-2 rounded-full bg-red-500"></span>
-                        Budget alert
+                        <span class="hidden lg:inline">Budget alert</span>
                         <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">{{ $monthlyBudgetAlertCount }}</span>
                     </span>
                 @endif
-
-                <div class="hidden lg:block">
-                    <x-dropdown align="right" width="48">
-                        <x-slot name="trigger">
-                            <button type="button" class="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2">
-                                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">
-                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                </span>
-                                <span class="hidden sm:block">{{ auth()->user()->name }}</span>
-                                <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.24a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08Z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </x-slot>
-
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('profile.edit')">
-                                {{ __('Profile') }}
-                            </x-dropdown-link>
-
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-
-                                <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                                    {{ __('Log Out') }}
-                                </x-dropdown-link>
-                            </form>
-                        </x-slot>
-                    </x-dropdown>
-                </div>
+                
             </div>
         </div>
     </div>

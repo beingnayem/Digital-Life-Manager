@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-4">
+        <div class="page-header">
             <div>
                 <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Expense Tracker</p>
             </div>
-            <button x-data @click="$dispatch('open-expense-modal', { mode: 'create' })" class="btn-primary">+ New Expense</button>
+            <button x-data @click="$dispatch('open-expense-modal', { mode: 'create' })" class="btn-primary w-full sm:w-auto">+ New Expense</button>
         </div>
     </x-slot>
 
@@ -188,8 +188,8 @@
     <div x-data x-cloak @open-expense-modal.window="(e) => { $store.expenseModal.open = true; $store.expenseModal.mode = e.detail.mode; if(e.detail.mode === 'edit') { $store.expenseModal.expense = e.detail.expense; } else { $store.expenseModal.expense = { amount: '', category: '', description: '', date: new Date().toISOString().split('T')[0], payment_method: 'card', status: 'confirmed' }; } }">
         <div x-show="$store.expenseModal.open" class="fixed inset-0 z-50 flex items-center justify-center">
             <div class="fixed inset-0 bg-black/40" @click="$store.expenseModal.open=false"></div>
-            <div class="relative w-full max-w-2xl">
-                <div class="card">
+            <div class="modal-shell max-w-2xl">
+                <div class="card modal-card">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-slate-900" x-text="$store.expenseModal.mode === 'create' ? 'Add Expense' : 'Edit Expense'"></h3>
