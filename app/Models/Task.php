@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
         'user_id',
@@ -131,5 +132,26 @@ class Task extends Model
         }
 
         return min(100, (($this->actual_hours ?? 0) / $this->estimated_hours) * 100);
+    }
+
+    public function searchableAs(): string
+    {
+        return 'tasks';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'category' => $this->category,
+            'priority' => $this->priority,
+            'status' => $this->status,
+            'due_date' => optional($this->due_date)->toDateString(),
+            'created_at' => optional($this->created_at)->toIso8601String(),
+            'updated_at' => optional($this->updated_at)->toIso8601String(),
+        ];
     }
 }

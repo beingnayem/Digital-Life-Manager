@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Expense extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
         'user_id',
@@ -169,5 +170,26 @@ class Expense extends Model
         }
 
         return ($budget->spent_amount / $budget->limit_amount) * 100;
+    }
+
+    public function searchableAs(): string
+    {
+        return 'expenses';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'amount' => (float) $this->amount,
+            'category' => $this->category,
+            'description' => $this->description,
+            'payment_method' => $this->payment_method,
+            'date' => optional($this->date)->toDateString(),
+            'status' => $this->status,
+            'created_at' => optional($this->created_at)->toIso8601String(),
+            'updated_at' => optional($this->updated_at)->toIso8601String(),
+        ];
     }
 }

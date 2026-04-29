@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
 
 class Budget extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable;
 
     protected $fillable = [
         'user_id',
@@ -127,5 +128,26 @@ class Budget extends Model
         $this->user->notify(new \App\Notifications\BudgetLimitExceededNotification($this));
 
         $this->forceFill(['alert_sent_at' => now()])->saveQuietly();
+    }
+
+    public function searchableAs(): string
+    {
+        return 'budgets';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'category' => $this->category,
+            'limit_amount' => (float) $this->limit_amount,
+            'spent_amount' => (float) $this->spent_amount,
+            'alert_threshold' => $this->alert_threshold,
+            'is_active' => $this->is_active,
+            'month_year' => $this->month_year,
+            'created_at' => optional($this->created_at)->toIso8601String(),
+            'updated_at' => optional($this->updated_at)->toIso8601String(),
+        ];
     }
 }
