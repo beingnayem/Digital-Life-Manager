@@ -10,6 +10,63 @@ class Note extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::created(function (Note $note): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $note->user_id,
+                'action' => 'created',
+                'entity_type' => 'Note',
+                'entity_id' => $note->id,
+                'old_values' => null,
+                'new_values' => $note->auditSnapshot(),
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::updating(function (Note $note): void {
+            $dirty = $note->getDirty();
+            unset($dirty['updated_at']);
+
+            if (empty($dirty)) {
+                return;
+            }
+
+            $oldValues = [];
+            foreach (array_keys($dirty) as $field) {
+                $oldValues[$field] = $note->getOriginal($field);
+            }
+
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $note->user_id,
+                'action' => 'updated',
+                'entity_type' => 'Note',
+                'entity_id' => $note->id,
+                'old_values' => $oldValues,
+                'new_values' => $dirty,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::deleted(function (Note $note): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $note->user_id,
+                'action' => 'deleted',
+                'entity_type' => 'Note',
+                'entity_id' => $note->id,
+                'old_values' => $note->auditSnapshot(),
+                'new_values' => null,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'title',
@@ -216,5 +273,14 @@ class Note extends Model
             'created_at' => optional($this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),
         ];
+    }
+
+    protected function auditSnapshot(): array
+    {
+        $data = $this->attributesToArray();
+
+        unset($data['updated_at'], $data['deleted_at']);
+
+        return $data;
     }
 }

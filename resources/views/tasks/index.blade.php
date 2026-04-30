@@ -4,9 +4,9 @@
             <div>
                 <p class="text-sm font-medium uppercase tracking-[0.24em] text-primary-500">Task Manager</p>
             </div>
-            <div class="page-header-actions">
-                <form method="GET" action="{{ route('tasks.index') }}" class="form-row-responsive w-full md:w-auto">
-                    <select name="priority" class="form-input w-full sm:min-w-[11rem] text-sm">
+            <div class="page-header-actions flex flex-wrap items-center gap-3">
+                <form method="GET" action="{{ route('tasks.index') }}" class="flex flex-1 flex-wrap items-center gap-2 min-w-0">
+                    <select name="priority" class="form-input w-full sm:w-auto sm:min-w-[9.5rem] max-w-[12rem] text-sm">
                         <option value="">All priorities</option>
                         <option value="low" {{ request('priority')=='low' ? 'selected' : '' }}>Low</option>
                         <option value="medium" {{ request('priority')=='medium' ? 'selected' : '' }}>Medium</option>
@@ -14,18 +14,18 @@
                         <option value="urgent" {{ request('priority')=='urgent' ? 'selected' : '' }}>Urgent</option>
                     </select>
 
-                    <select name="status" class="form-input w-full sm:w-auto text-sm">
+                    <select name="status" class="form-input w-full sm:w-auto sm:min-w-[9rem] text-sm">
                         <option value="">All status</option>
                         <option value="not_started" {{ request('status')=='not_started' ? 'selected' : '' }}>Not started</option>
                         <option value="in_progress" {{ request('status')=='in_progress' ? 'selected' : '' }}>In progress</option>
                         <option value="completed" {{ request('status')=='completed' ? 'selected' : '' }}>Completed</option>
                     </select>
 
-                    <input name="search" value="{{ request('search') }}" placeholder="Search title" class="form-input w-full sm:w-auto text-sm px-3" />
-                    <button type="submit" class="btn-secondary">Filter</button>
+                    <input name="search" value="{{ request('search') }}" placeholder="Search title" class="form-input w-full sm:flex-1 sm:min-w-[12rem] text-sm px-3" />
+                    <button type="submit" class="btn-secondary whitespace-nowrap">Filter</button>
                 </form>
 
-                <button x-data @click="$dispatch('open-task-modal', { mode: 'create' })" class="btn-primary w-full sm:w-auto">+ New Task</button>
+                <button x-data @click="$dispatch('open-task-modal', { mode: 'create' })" class="btn-primary shrink-0 whitespace-nowrap">+ New Task</button>
             </div>
         </div>
     </x-slot>
@@ -34,9 +34,10 @@
         <div class="page-container">
             <div class="card">
                 <div class="card-body">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-white">
+                    <div class="table-shell">
+                        <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">Done</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">Title</th>
@@ -46,7 +47,7 @@
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="tasks-table-body" class="divide-y divide-slate-100 bg-white">
+                            <tbody id="tasks-table-body">
                                 @forelse ($tasks as $task)
                                     @include('tasks.partials.row', ['task' => $task])
                                 @empty
@@ -63,6 +64,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     <div class="mt-4">{{ $tasks->links() }}</div>

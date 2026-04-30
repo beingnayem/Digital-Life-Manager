@@ -9,6 +9,63 @@ class Budget extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::created(function (Budget $budget): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $budget->user_id,
+                'action' => 'created',
+                'entity_type' => 'Budget',
+                'entity_id' => $budget->id,
+                'old_values' => null,
+                'new_values' => $budget->auditSnapshot(),
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::updating(function (Budget $budget): void {
+            $dirty = $budget->getDirty();
+            unset($dirty['updated_at']);
+
+            if (empty($dirty)) {
+                return;
+            }
+
+            $oldValues = [];
+            foreach (array_keys($dirty) as $field) {
+                $oldValues[$field] = $budget->getOriginal($field);
+            }
+
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $budget->user_id,
+                'action' => 'updated',
+                'entity_type' => 'Budget',
+                'entity_id' => $budget->id,
+                'old_values' => $oldValues,
+                'new_values' => $dirty,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::deleted(function (Budget $budget): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $budget->user_id,
+                'action' => 'deleted',
+                'entity_type' => 'Budget',
+                'entity_id' => $budget->id,
+                'old_values' => $budget->auditSnapshot(),
+                'new_values' => null,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'category',
@@ -148,5 +205,14 @@ class Budget extends Model
             'created_at' => optional($this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),
         ];
+    }
+
+    protected function auditSnapshot(): array
+    {
+        $data = $this->attributesToArray();
+
+        unset($data['updated_at']);
+
+        return $data;
     }
 }

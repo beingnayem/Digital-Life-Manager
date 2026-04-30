@@ -50,6 +50,60 @@ class Expense extends Model
         static::saved($syncBudgetAlerts);
         static::deleted($syncBudgetAlerts);
         static::restored($syncBudgetAlerts);
+
+        static::created(function (Expense $expense): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $expense->user_id,
+                'action' => 'created',
+                'entity_type' => 'Expense',
+                'entity_id' => $expense->id,
+                'old_values' => null,
+                'new_values' => $expense->auditSnapshot(),
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::updating(function (Expense $expense): void {
+            $dirty = $expense->getDirty();
+            unset($dirty['updated_at']);
+
+            if (empty($dirty)) {
+                return;
+            }
+
+            $oldValues = [];
+            foreach (array_keys($dirty) as $field) {
+                $oldValues[$field] = $expense->getOriginal($field);
+            }
+
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $expense->user_id,
+                'action' => 'updated',
+                'entity_type' => 'Expense',
+                'entity_id' => $expense->id,
+                'old_values' => $oldValues,
+                'new_values' => $dirty,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::deleted(function (Expense $expense): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $expense->user_id,
+                'action' => 'deleted',
+                'entity_type' => 'Expense',
+                'entity_id' => $expense->id,
+                'old_values' => $expense->auditSnapshot(),
+                'new_values' => null,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
     }
 
     /**
@@ -190,5 +244,14 @@ class Expense extends Model
             'created_at' => optional($this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),
         ];
+    }
+
+    protected function auditSnapshot(): array
+    {
+        $data = $this->attributesToArray();
+
+        unset($data['updated_at'], $data['deleted_at']);
+
+        return $data;
     }
 }

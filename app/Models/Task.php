@@ -4,12 +4,68 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::created(function (Task $task): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $task->user_id,
+                'action' => 'created',
+                'entity_type' => 'Task',
+                'entity_id' => $task->id,
+                'old_values' => null,
+                'new_values' => $task->auditSnapshot(),
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::updating(function (Task $task): void {
+            $dirty = $task->getDirty();
+            unset($dirty['updated_at']);
+
+            if (empty($dirty)) {
+                return;
+            }
+
+            $oldValues = [];
+            foreach (array_keys($dirty) as $field) {
+                $oldValues[$field] = $task->getOriginal($field);
+            }
+
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $task->user_id,
+                'action' => 'updated',
+                'entity_type' => 'Task',
+                'entity_id' => $task->id,
+                'old_values' => $oldValues,
+                'new_values' => $dirty,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::deleted(function (Task $task): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $task->user_id,
+                'action' => 'deleted',
+                'entity_type' => 'Task',
+                'entity_id' => $task->id,
+                'old_values' => $task->auditSnapshot(),
+                'new_values' => null,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+    }
 
     protected $fillable = [
         'user_id',
@@ -152,5 +208,14 @@ class Task extends Model
             'created_at' => optional($this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),
         ];
+    }
+
+    protected function auditSnapshot(): array
+    {
+        $data = $this->attributesToArray();
+
+        unset($data['updated_at'], $data['deleted_at']);
+
+        return $data;
     }
 }

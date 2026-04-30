@@ -9,6 +9,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\AuditLogController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return back()->with('status', 'Test email sent successfully to '.auth()->user()->email);
     })->name('mail.test');
+
+    // Audit logs (read-only)
+    Route::resource('audit-logs', AuditLogController::class)->only(['index', 'show']);
 });
 
 Route::get('/profile/account-deletion/confirm/{deletion}', [AccountDeletionController::class, 'confirm'])

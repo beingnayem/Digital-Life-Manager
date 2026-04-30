@@ -161,6 +161,69 @@
 		@apply max-h-[88vh] overflow-y-auto;
 	}
 
+	.table-shell {
+		@apply overflow-hidden rounded-2xl border border-slate-200/70 bg-white/95 shadow-sm;
+	}
+
+	.table-scroll {
+		@apply overflow-x-auto;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+	}
+
+	.table-scroll::-webkit-scrollbar {
+		height: 10px;
+	}
+
+	.table-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.table-scroll::-webkit-scrollbar-thumb {
+		background: rgba(148, 163, 184, 0.7);
+		border-radius: 999px;
+	}
+
+	.data-table {
+		@apply min-w-full divide-y divide-slate-200 text-sm;
+	}
+
+	.data-table thead {
+		@apply bg-slate-50/90;
+	}
+
+	.data-table thead th {
+		@apply whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500;
+	}
+
+	.data-table tbody {
+		@apply divide-y divide-slate-100 bg-white;
+	}
+
+	.data-table tbody tr {
+		@apply transition-colors hover:bg-slate-50/70;
+	}
+
+	.data-table tbody td {
+		@apply whitespace-nowrap px-4 py-4 align-middle text-slate-700;
+	}
+
+	.pagination-shell {
+		@apply flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white/95 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between;
+	}
+
+	.pagination-shell .pagination-info {
+		@apply text-sm text-slate-500;
+	}
+
+	.pagination-shell nav {
+		@apply flex items-center justify-center sm:justify-end;
+	}
+
+	.pagination-shell .inline-flex {
+		@apply rounded-xl shadow-sm;
+	}
+
 	/* Cards */
 	.card {
 		@apply bg-white/90 border border-slate-200/70 rounded-2xl shadow-sm overflow-hidden transition-all duration-300 ease-out;

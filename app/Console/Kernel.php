@@ -9,7 +9,7 @@ class Kernel
     public function schedule(Schedule $schedule): void
     {
         $schedule->command('tasks:send-reminders')
-            ->everyMinute()
+            ->dailyAt('23:59')
             ->withoutOverlapping();
 
         $schedule->command('budgets:send-limit-alerts')

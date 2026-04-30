@@ -9,6 +9,63 @@ class Mood extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::created(function (Mood $mood): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $mood->user_id,
+                'action' => 'created',
+                'entity_type' => 'Mood',
+                'entity_id' => $mood->id,
+                'old_values' => null,
+                'new_values' => $mood->auditSnapshot(),
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::updating(function (Mood $mood): void {
+            $dirty = $mood->getDirty();
+            unset($dirty['updated_at']);
+
+            if (empty($dirty)) {
+                return;
+            }
+
+            $oldValues = [];
+            foreach (array_keys($dirty) as $field) {
+                $oldValues[$field] = $mood->getOriginal($field);
+            }
+
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $mood->user_id,
+                'action' => 'updated',
+                'entity_type' => 'Mood',
+                'entity_id' => $mood->id,
+                'old_values' => $oldValues,
+                'new_values' => $dirty,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+
+        static::deleted(function (Mood $mood): void {
+            AuditLog::create([
+                'user_id' => auth()->id() ?? $mood->user_id,
+                'action' => 'deleted',
+                'entity_type' => 'Mood',
+                'entity_id' => $mood->id,
+                'old_values' => $mood->auditSnapshot(),
+                'new_values' => null,
+                'ip_address' => request()?->ip(),
+                'user_agent' => request()?->userAgent(),
+                'created_at' => now(),
+            ]);
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'mood_level',
@@ -211,5 +268,14 @@ class Mood extends Model
         }
 
         return $patterns;
+    }
+
+    protected function auditSnapshot(): array
+    {
+        $data = $this->attributesToArray();
+
+        unset($data['updated_at']);
+
+        return $data;
     }
 }

@@ -147,9 +147,10 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="mb-4 text-sm font-semibold text-slate-900">Recent Expenses</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-white">
+                    <div class="table-shell">
+                        <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">Date</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500">Description</th>
@@ -159,7 +160,7 @@
                                     <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="expenses-table-body" class="divide-y divide-slate-100 bg-white">
+                            <tbody id="expenses-table-body">
                                 @forelse ($expenses as $expense)
                                     @include('expenses.partials.row', ['expense' => $expense])
                                 @empty
@@ -176,6 +177,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     <div class="mt-4">{{ $expenses->links() }}</div>
