@@ -86,15 +86,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getDashboardStats()
     {
         // Tasks: Today vs Yesterday
-        $completedTasksToday = $this->tasks()
-            ->where('status', 'completed')
-            ->whereDate('completed_at', today())
-            ->count();
+        $completedTasksToday = $this->countCompletedTasksOnDate(today());
 
-        $completedTasksYesterday = $this->tasks()
-            ->where('status', 'completed')
-            ->whereDate('completed_at', today()->subDay())
-            ->count();
+        $completedTasksYesterday = $this->countCompletedTasksOnDate(today()->subDay());
 
         $tasksTrend = $completedTasksYesterday > 0
             ? round((($completedTasksToday - $completedTasksYesterday) / $completedTasksYesterday) * 100)
@@ -138,6 +132,10 @@ class User extends Authenticatable implements MustVerifyEmail
             ->limit(5)
             ->get(['id', 'title', 'category', 'is_pinned', 'updated_at']);
 
+        $totalActiveNotes = $this->notes()
+            ->active()
+            ->count();
+
         $recentMoods = $this->moods()
             ->whereDate('recorded_date', '>=', now()->subDays(6))
             ->orderByDesc('recorded_date')
@@ -169,6 +167,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'total_expenses' => $expensesThisWeek,
             'expenses_trend' => $expensesTrend,
             'recent_notes' => $recentNotes,
+            'total_active_notes' => $totalActiveNotes,
             'recent_tasks' => $recentTasks,
             'recent_expenses' => $recentExpenses,
             'mood_summary' => [
@@ -195,16 +194,31 @@ class User extends Authenticatable implements MustVerifyEmail
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->startOfDay();
-            $count = $this->tasks()
-                ->where('status', 'completed')
-                ->whereDate('completed_at', $date)
-                ->count();
+            $count = $this->countCompletedTasksOnDate($date);
             $data[] = [
                 'label' => $date->format('M d'),
                 'value' => $count,
             ];
         }
         return $data;
+    }
+
+    /**
+     * Count completed tasks on a given date.
+     * Falls back to updated_at for legacy records where completed_at is null.
+     */
+    private function countCompletedTasksOnDate($date): int
+    {
+        return $this->tasks()
+            ->where('status', 'completed')
+            ->where(function ($query) use ($date) {
+                $query->whereDate('completed_at', $date)
+                    ->orWhere(function ($legacy) use ($date) {
+                        $legacy->whereNull('completed_at')
+                            ->whereDate('updated_at', $date);
+                    });
+            })
+            ->count();
     }
 
     /**

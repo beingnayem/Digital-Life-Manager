@@ -20,37 +20,40 @@ class ExpenseController extends Controller
         $query = $request->user()->expenses();
 
         // Filter by category
-        if ($request->has('category') && $request->category !== '') {
-            $query->where('category', $request->category);
+        if ($request->filled('category')) {
+            $query->where('category', $request->input('category'));
         }
 
         // Filter by status
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
         }
 
         // Filter by amount range
-        if ($request->has('min_amount') && $request->min_amount !== '') {
-            $query->where('amount', '>=', $request->min_amount);
+        if ($request->filled('min_amount')) {
+            $query->where('amount', '>=', (float) $request->input('min_amount'));
         }
 
-        if ($request->has('max_amount') && $request->max_amount !== '') {
-            $query->where('amount', '<=', $request->max_amount);
+        if ($request->filled('max_amount')) {
+            $query->where('amount', '<=', (float) $request->input('max_amount'));
         }
 
         // Filter by date range
-        if ($request->has('start_date') && $request->start_date !== '') {
-            $query->where('date', '>=', $request->start_date);
+        if ($request->filled('start_date')) {
+            $query->whereDate('date', '>=', $request->input('start_date'));
         }
 
-        if ($request->has('end_date') && $request->end_date !== '') {
-            $query->where('date', '<=', $request->end_date);
+        if ($request->filled('end_date')) {
+            $query->whereDate('date', '<=', $request->input('end_date'));
         }
 
         // Search by description
-        if ($request->has('search') && $request->search !== '') {
-            $query->where('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('category', 'like', '%' . $request->search . '%');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', '%' . $search . '%')
+                  ->orWhere('category', 'like', '%' . $search . '%');
+            });
         }
 
         $expenses = $query->latest('date')->paginate(15)->withQueryString();

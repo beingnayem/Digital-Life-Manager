@@ -53,7 +53,7 @@
                             @foreach($expenses as $expense)
                                 <li class="card-item">
                                     <a href="{{ route('expenses.edit', $expense) }}" class="card-link">{{ $expense->description ?? 'Expense #' . $expense->id }}</a>
-                                    <div class="card-meta">{{ $expense->category }} • {{ money($expense->amount) }}</div>
+                                    <div class="card-meta">{{ $expense->category }} • ${{ number_format((float) $expense->amount, 2) }}</div>
                                 </li>
                             @endforeach
                         </ul>
@@ -72,7 +72,7 @@
                             @foreach($budgets as $budget)
                                 <li class="card-item">
                                     <a href="{{ route('budgets.edit', $budget) }}" class="card-link">{{ $budget->name }}</a>
-                                    <div class="card-meta">{{ money($budget->limit_amount) }} • {{ $budget->frequency ?? 'monthly' }}</div>
+                                    <div class="card-meta">${{ number_format((float) $budget->limit_amount, 2) }} • {{ $budget->frequency ?? 'monthly' }}</div>
                                 </li>
                             @endforeach
                         </ul>

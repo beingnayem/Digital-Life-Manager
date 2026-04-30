@@ -19,15 +19,15 @@ class MoodController extends Controller
         $query = $request->user()->moods();
 
         if ($request->filled('mood_type')) {
-            $query->where('mood_label', $request->string('mood_type'));
+            $query->where('mood_label', $request->query('mood_type'));
         }
 
         if ($request->filled('start_date')) {
-            $query->whereDate('recorded_date', '>=', $request->date('start_date'));
+            $query->whereDate('recorded_date', '>=', $request->query('start_date'));
         }
 
         if ($request->filled('end_date')) {
-            $query->whereDate('recorded_date', '<=', $request->date('end_date'));
+            $query->whereDate('recorded_date', '<=', $request->query('end_date'));
         }
 
         $moods = $query->latest('recorded_date')->paginate(12)->withQueryString();

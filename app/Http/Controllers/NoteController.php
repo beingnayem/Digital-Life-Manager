@@ -19,25 +19,29 @@ class NoteController extends Controller
         $query = $request->user()->notes()->active();
 
         // Filter by category
-        if ($request->has('category') && $request->category !== '') {
-            $query->where('category', $request->category);
+        if ($request->filled('category')) {
+            $query->where('category', $request->input('category'));
         }
 
         // Filter by pin status
-        if ($request->has('pinned') && $request->pinned === '1') {
+        if ($request->filled('pinned') && $request->input('pinned') === '1') {
             $query->where('is_pinned', true);
         }
 
         // Search by title or content
-        if ($request->has('search') && $request->search !== '') {
-            $search = $request->search;
+        if ($request->filled('search')) {
+            $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', '%' . $search . '%')
                   ->orWhere('content', 'like', '%' . $search . '%');
             });
         }
 
-        $notes = $query->latest('updated_at')->paginate(12)->withQueryString();
+        $notes = $query
+            ->orderByDesc('is_pinned')
+            ->latest('updated_at')
+            ->paginate(12)
+            ->withQueryString();
 
         // Get distinct categories for filter dropdown
         $categories = $request->user()

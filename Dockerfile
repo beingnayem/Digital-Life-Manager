@@ -31,8 +31,7 @@ COPY . .
 # =========================
 # Install frontend + build Vite assets
 # =========================
-RUN npm install
-RUN npm run build
+RUN npm install && npm run build
 
 # =========================
 # Install Composer
@@ -42,7 +41,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
 # =========================
-# Permissions (VERY IMPORTANT)
+# Permissions
 # =========================
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
@@ -55,17 +54,23 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
 # =========================
-# Render PORT fix (CRITICAL)
+# Render PORT fix
 # =========================
 RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf
 RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
 # =========================
-# Expose Render port
+# Add entrypoint script
+# =========================
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# =========================
+# Expose port
 # =========================
 EXPOSE 10000
 
 # =========================
-# Start Apache
+# Start container using entrypoint
 # =========================
-CMD ["apache2-foreground"]
+CMD ["/entrypoint.sh"]

@@ -138,7 +138,7 @@
                             <div>
                                 <p class="text-sm font-medium text-slate-500">Recent notes</p>
                                 <p class="mt-2 text-4xl font-bold tracking-tight text-slate-900">
-                                    {{ $stats['recent_notes']->count() }}
+                                    {{ $stats['total_active_notes'] }}
                                 </p>
                                 <p class="mt-3 text-xs text-slate-500">Active notes saved</p>
                             </div>
