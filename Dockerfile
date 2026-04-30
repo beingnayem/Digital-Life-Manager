@@ -29,7 +29,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # =========================
-# Install frontend + build Vite assets
+# Install frontend + build assets
 # =========================
 RUN npm install && npm run build
 
@@ -41,13 +41,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
 # =========================
-# Permissions
+# Fix Laravel permissions (build time)
 # =========================
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+RUN mkdir -p storage/logs \
+    && touch storage/logs/laravel.log \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache \
+    && chmod -R 777 storage/logs
 
 # =========================
-# Laravel public directory fix
+# Laravel public directory
 # =========================
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
@@ -60,7 +63,7 @@ RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf
 RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
 # =========================
-# Add entrypoint script
+# Add entrypoint
 # =========================
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
@@ -71,6 +74,6 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 10000
 
 # =========================
-# Start container using entrypoint
+# Start container
 # =========================
 CMD ["/entrypoint.sh"]

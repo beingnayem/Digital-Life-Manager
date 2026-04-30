@@ -2,19 +2,27 @@
 
 echo "🚀 Starting Laravel container..."
 
-# Wait a bit for DB (important for cloud DB like DigitalOcean)
+# Wait for DB (important for DigitalOcean / cloud DB)
 sleep 5
 
-# Clear and cache config
+echo "🔧 Fixing permissions..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Ensure log file exists
+mkdir -p /var/www/html/storage/logs
+touch /var/www/html/storage/logs/laravel.log
+chmod 777 /var/www/html/storage/logs/laravel.log
+
+echo "🧹 Clearing cache..."
 php artisan config:clear
 php artisan cache:clear
+
+echo "⚙️ Caching config..."
 php artisan config:cache
 
-# Run migrations
+echo "🛢 Running migrations..."
 php artisan migrate --force
 
-# Optional: seed
-# php artisan db:seed --force
-
-# Start Apache
+echo "🌐 Starting Apache..."
 exec apache2-foreground
