@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\Budget;
 use App\Policies\BudgetPolicy;
 
+use Illuminate\Support\Facades\URL;
+
+
 class AppServiceProvider extends ServiceProvider
 {
     protected $policies = [
@@ -26,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
